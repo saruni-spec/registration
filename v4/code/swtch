@@ -1,0 +1,56 @@
+// Perform operation-specific input collection and validation
+    // switch (section) {
+    //   case "sign_up": {
+    //     //
+    //     // For sign_up check both password fields
+    //     const password = this.get_element(
+    //       "sign_up_password"
+    //     ) as HTMLInputElement;
+    //     const confirm_password = this.get_element(
+    //       "sign_up_confirm"
+    //     ) as HTMLInputElement;
+    //     //
+    //     // Check if password and confirm password match
+    //     if (password.value !== confirm_password.value) {
+    //       //
+    //       // Find the error span to display mismatch message
+    //       const error_span1: HTMLElement = this.get_element("sp_error");
+    //       const error_span2: HTMLElement = this.get_element("sc_error");
+    //       //
+    //       // Show error if passwords do not match
+    //       error_span1.textContent = "Passwords do not match";
+    //       error_span2.textContent = "Passwords do not match";
+    //       return;
+    //     }
+    //     break;
+    //   }
+    //   case "change": {
+    //     //
+    //     // For change password,check the 2nd ans 3rd password
+    //     //Collect the passwords
+    //     const new_password = this.get_element(
+    //       "change_new_password"
+    //     ) as HTMLInputElement;
+    //     const confirm_password = this.get_element(
+    //       "change_confirm"
+    //     ) as HTMLInputElement;
+    //     //
+    //     // Check if new password and confirm new password match
+    //     if (new_password.value !== confirm_password.value) {
+    //       //
+    //       // Find the error span to display mismatch message
+    //       const error_span1: HTMLElement = this.get_element("cnp_error");
+    //       const error_span2: HTMLElement = this.get_element("cc_error");
+    //       //
+    //       // Show error if passwords do not match
+    //       error_span1.textContent = "Passwords do not match";
+    //       error_span2.textContent = "Passwords do not match";
+    //       return;
+    //     }
+    //     break;
+    //   }
+    //   default:
+    //     //
+    //     // Return the collected and validated inputs
+    //     return section;
+    // }

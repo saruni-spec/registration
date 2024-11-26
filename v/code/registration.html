@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Registration Form using Mutall Principles</title>
+    <link rel="stylesheet" href="registration.css"/>
+    <script type="module">
+        import {auth} from "./registration.js";
+        //
+        //After the page loads,create an instance of the auth class and show 
+        document.addEventListener("DOMContentLoaded", () => {
+            
+             //
+             //Create an instance of the auth class
+             const iauth=new auth();
+             //
+             //Initialize it
+             iauth.init();
+            
+        });
+        
+    </script>
+</head>
+<body>
+    <form >
+        <fieldset id="login">
+            <label class="radio">
+                <input type="radio" name="choice" value="login"/>
+                Login
+            </label>
+            <label>
+                <span>User Name</span>
+                <input type="text" />
+                
+                <span class="error"></span>
+            </label>
+            <label>
+                <span>Password</span>
+                <input type="password" />
+                
+                <span class="error"></span>
+            </label>
+        </fieldset>
+        <fieldset id="sign_up">
+            <label class="radio">
+                <input type="radio" name="choice" value="sign_up"/>
+                Sign up
+            </label>
+            <label>
+                <span>Email</span>
+                <input type="email"/>
+                
+                <span class="error"></span>
+            </label>
+            <label>
+                <span>Username</span>
+                <input type="text"/>
+                
+                <span class="error"></span>
+            </label>
+            <label>
+                <span>Password</span>
+                <input type="password" />
+                
+                <span class="error"></span>
+            </label>
+            <label>
+                <span>Confirm Password</span>
+                <input type="password" />
+                
+                <span class="error"></span>
+            </label>
+        </fieldset>
+        <fieldset id="forgot">
+            <label class="radio">
+                <input type="radio" name="choice" value="forgot"/>
+                Forgot Password
+            </label>
+            <label>
+            <span>Username</span>
+                <input type="text" />
+                
+                <span class="error"></span>
+            </label>
+            <label>
+                <span>Email</span>
+                <input type="email" />
+                
+                <span class="error"></span>
+            </label>
+        </fieldset>
+        <fieldset id="change">
+            <label class="radio">
+                <input type="radio" name="choice" value="change"/>
+                Change Password
+            </label>
+            <label>
+            <span>Username</span>
+                <input type="text" />
+                
+                <span class="error"></span>
+            </label>
+            <label>
+                <span>Old Password</span>
+                <input type="password" />
+                
+                <span class="error"></span>
+            </label>
+            <label>
+                <span>New Password</span>
+                <input type="password" />
+                
+                <span class="error"></span>
+            </label>
+            <label>
+                <span>Confirm New Password</span>
+                <input type="password" />
+                
+                <span class="error"></span>
+            </label>
+        </fieldset>
+        <button type="submit">Submit</button>
+    </form>
+</body>
+</html>

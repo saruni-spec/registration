@@ -1,0 +1,93 @@
+/* Center all content on the page and ensure it takes up full width/height */
+body, html {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    margin: 0;
+    min-height: 100vh;
+}
+
+/* Style the main form container with a card-like appearance */
+#input-form {
+    width: 90%;
+    max-width: 500px;
+    min-height: 400px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2rem;
+    padding: 1.5%;
+    /* Add subtle shadow for depth */
+    box-shadow: 0 10px 30px rgb(214, 214, 214);  
+    /* Round the corners */
+    border-radius: 10px;  
+    font-size: 1.1rem;
+}
+
+/* Arrange radio buttons horizontally with spacing */
+.radio-group {
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-start;
+    width: 100%;
+    gap: 5%;
+}
+
+/* Container for dynamically added content with vertical spacing */
+#dynamic-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8%;
+    width: 100%;
+    min-height: 300px;
+}
+
+/* Style individual form field containers with hover effect */
+#dynamic-content label {
+    width: 90%;
+    margin: 3%;
+    padding: 3%;
+    border-radius: 10px;
+    background-color: rgb(243, 243, 243);  
+    /* Smooth transition for hover effect */
+    transition: transform 0.2s ease-in-out;  
+}
+
+/* Make input text size consistent */
+label input {
+    font-size: 1rem;
+}
+
+/* Add subtle lift effect on hover */
+#dynamic-content label:hover {
+    transform: translateY(-3px);
+}
+
+/* Hide elements when needed */
+.hidden {
+    display: none;
+}
+
+/* Style buttons with consistent look and interactive cursor */
+button[type="button"] {
+    padding: 3%;
+    margin: 3%;
+    border-radius: 10px;
+    width: 95%;
+    cursor: pointer;
+    background-color: rgb(158, 171, 245); 
+}
+
+/* Style error messages to be clearly visible and aligned */
+.error {
+    /* Red text for errors */
+    color: #ef4444;  
+    font-size: 0.875rem;
+    margin-top: 0.25rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}

@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Registration Form using IO library</title>
+    <link rel="stylesheet" href="registration.css" />
+    <script type="module">
+        //
+        // Import the `render_inputs` function which will be used to dynamically create input fields
+        import { render_inputs } from "./registration.js";
+        
+        window.onload = () => {
+            //
+            // Select all radio buttons that have the name "choice" (login, sign up, reset)
+            const radioButtons = document.querySelectorAll('input[name="choice"]');
+            //
+            // For each radio button, add an event listener that triggers when the user selects a different option
+            radioButtons.forEach(radio => {
+                //
+                // Add 'change' event listener to each radio button
+                radio.addEventListener('change', async (e) => {
+                    //
+                    // Find the existing dynamic content (if any), which contains previous input fields
+                    const dynamicContent = document.getElementById('dynamic-content');
+                    //
+                    // If there's any dynamic content on the page (from a previous selection), remove it to avoid duplication
+                    if (dynamicContent) {
+                        //
+                        // Clear the previous dynamic inputs and submit button
+                        dynamicContent.remove(); 
+                    }
+                    //
+                    // Call the `render_inputs` function  and pass the selected radio button value (login, sign up, or reset)
+                    // This will create new inputs based on the user's selection
+                    await render_inputs(e.target.value);
+                });
+            });
+        };
+    </script>    
+</head>
+<body>
+    <form id="input-form">
+        <div class="radio-group">
+            <label>
+                <input title="login" type="radio" name="choice" value="login">
+                Login
+            </label>
+            <label>
+                <input title="sign_up" type="text" name="choice" value="sign_up" >
+                Sign Up
+            </label>
+            <label>
+                <input title="reset" type="radio" name="choice" value="reset">
+                Reset Password
+            </label>
+        </div>
+    </form>
+</body>
+</html>

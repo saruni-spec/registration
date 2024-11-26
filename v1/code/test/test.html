@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Registration Form using IO library</title>
+    <link rel="stylesheet" href="test.css" />
+    <script type="module">
+        //
+        // Import the `render_inputs` which will be used to populate form inputs dynamically
+        import { render_inputs } from "./test.js";
+        
+        window.onload = async () => {
+            //
+            // Call the `render_inputs` function to initialize the form inputs
+            await render_inputs();
+            //
+            // Select all radio buttons that have the name "choice" (login, sign up, reset)
+            const radioButtons = document.querySelectorAll('input[name="choice"]');
+            //
+            // For each radio button, add an event listener to detect when the user selects an option
+            radioButtons.forEach(radio => {
+                radio.addEventListener('change', (e) => {
+                    //
+                    // Select all divs that represent different form sections (login, sign up, reset password)
+                    const sections = document.querySelectorAll('.form-section');
+                    //
+                    // Hide all sections first by removing the 'active' class used to hide or show the section
+                    sections.forEach(section => {
+                        section.classList.remove('active');
+                    });
+                    //
+                    // Get the selected radio button's value (either 'login', 'sign_up', or 'reset')
+                    const selectedValue = e.target.value;
+                    //
+                    // Use the selected value to find the corresponding section (e.g., #login_div, #sign_up_div, #reset_div)
+                    const selectedDiv = document.getElementById(`${selectedValue}_div`);
+                    //
+                    // If the section exists, add the 'active' class to make the selected section visible
+                    if (selectedDiv) {
+                        selectedDiv.classList.add('active');
+                    }
+                });
+            });
+        };
+    </script>
+    
+</head>
+<body>
+    <form id="input-form">
+        <div class="radio-group">
+            <label>
+                Login
+                <input title="login" type="radio" name="choice" value="login">
+            </label>
+            <div id="login_div" class="form-section"></div>
+            <label>
+                Sign Up
+                <input title="sign_up" type="radio" name="choice" value="sign_up">
+            </label>
+            <div id="sign_up_div" class="form-section"></div>
+            <label>
+                Reset Password
+                <input title="reset" type="radio" name="choice" value="reset">
+            </label>
+            <div id="reset_div" class="form-section"></div>
+        </div>
+        
+        
+        
+        
+    </form>
+</body>
+</html>

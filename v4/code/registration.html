@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Registration Form using Mutall Principles</title>
+    <link rel="stylesheet" href="registration.css"/>
+    <script type="module">
+        import {auth} from "./registration.js";
+        //
+        //After the page loads,create an instance of the auth class and show 
+        document.addEventListener("DOMContentLoaded", () => {
+             //
+             //Create an instance of the auth class
+             const iauth=new auth();
+             //
+             //Allow the iauth variable to be accessed outside this script
+             window.iauth=iauth;
+        });
+        
+    </script>
+</head>
+<body>
+    <form id="auth"  oninput="iauth.clear_errors()">
+        <span id="form_error"></span>
+        <fieldset id="login">
+            <label class="radio">
+                <input type="radio" name="choice" value="login"/>
+                Login
+            </label>
+
+            <label>
+                <span>User Name</span>
+                <input id="login_name" type="text" />
+                <span id="ln_error" class="error"></span>
+            </label>
+
+            <label >
+                <span>Password</span>
+                <input id="login_password" type="password" />
+                <span id="lp_error" class="error"></span>
+            </label>
+
+        </fieldset>
+        <fieldset id="sign_up">
+            <label class="radio">
+                <input type="radio" name="choice" />
+                Sign up
+            </label>
+            <label>
+                <span>User Name</span>
+                <input id="sign_up_name" type="text"/>
+                
+                <span id="sn_error" class="error"></span>
+            </label>
+            <label>
+                <span>Email</span>
+                <input id="sign_up_email" type="email"/>
+                
+                <span id="se_error" class="error"></span>
+            </label>
+           
+            <label>
+                <span>Password</span>
+                <input id="sign_up_password" type="password" />
+                
+                <span id="sp_error" class="error"></span>
+            </label>
+            <label>
+                <span>Confirm Password</span>
+                <input id="sign_up_confirm" type="password" />
+                
+                <span id="sc_error" class="error"></span>
+            </label>
+        </fieldset>
+        <fieldset id="forgot">
+            <label class="radio">
+                <input type="radio" name="choice" value="forgot"/>
+                Forgot Password
+            </label>
+            <label>
+            <span>User Name</span>
+                <input id="forgot_name" type="text" />
+                <span id="fn_error" class="error"></span>
+            </label>
+            <label>
+                <span>Email</span>
+                <input id="forgot_email" type="email" />
+                <span id="fe_error" class="error"></span>
+            </label>
+        </fieldset>
+        <fieldset id="change">
+            <label class="radio">
+                <input type="radio" name="choice" value="change"/>
+                Change Password
+            </label>
+            <label>
+            <span>User Name</span>
+                <input id="change_name" type="text" />
+                <span id="cn_error" class="error"></span>
+            </label>
+            <label>
+                <span>Old Password</span>
+                <input id="change_password" type="password" />
+                <span id="cp_error" class="error"></span>
+            </label>
+            <label>
+                <span>New Password</span>
+                <input id="change_new_password" type="password" />
+                <span id="cnp_error" class="error"></span>
+            </label>
+            <label>
+                <span>Confirm Password</span>
+                <input id="change_confirm" type="password" />
+                
+                <span id="cc_error" class="error"></span>
+            </label>
+        </fieldset>
+        <button type="submit" 
+            onclick="iauth.submit(event)">Submit
+            </button>
+    </form>
+</body>
+</html>
