@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <script type="module">
+        import { auth } from "./registration.js";
+        //
+        //initialize the auth class
+        const iauth = new auth();
+        //
+        //Determine the page contents based on if a user is logged in or not
+        function page_content(current_user){
+            const page = document.body;
+            //
+            //if a user exists,add a logout button
+            if (current_user) {
+            page.innerHTML = `
+                <p>Welcome, ${current_user.name}!</p>
+                <button onclick="iauth.logout()">Logout</button>
+            `;
+            //
+            //if a user does not exist,add a login buttton
+            } else {
+                page.innerHTML = `<p>No user logged in.</p>
+                <button onclick="window.location.href='registration.html'">Sign In</button>
+                `;
+            }
+        }
+        //
+        //Afther the window loads,check for a logged in user
+        window.onload=()=>{
+        //
+        //get the current logged in user    
+        const current_user = iauth.current_user();
+        
+        //
+        //load the page content
+        page_content(current_user);
+        
+        }
+        //
+        //add the auth instace to the window
+        window.iauth=iauth
+        
+
+    </script>
+</head>
+<body>
+    
+</body>
+</html>

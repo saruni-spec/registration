@@ -35,7 +35,7 @@ export class auth extends view {
             // Add listeners to the inputs in the selected fieldset
             input.addEventListener("input", (event) => {
                 // Get the error span for the input
-                const error_span = label.querySelector(".error");
+                const error_span = this.query_selector(`#${label.id} span.error`);
                 //
                 // Clear the error message in the error span
                 if (error_span)
@@ -61,21 +61,12 @@ export class auth extends view {
                 // Clear the errors for each input
                 label_sections.forEach((label_section) => {
                     //
-                    // Get the input in the label section
-                    const input = label_section.querySelector("input");
-                    //
                     // Get the error span element in that label section
-                    const error_span = label_section.querySelector(".error");
+                    const error_span = this.query_selector(`#${label_section.id} span.error`);
                     //
                     // Clear the error message in the error span
-                    if (error_span) {
-                        error_span.textContent = "";
-                    }
-                    //
-                    // Reset the input value if needed
-                    if (input) {
-                        input.value = "";
-                    }
+                    error_span.textContent = "";
+                    // }
                 });
             }
         });
@@ -156,14 +147,7 @@ export class auth extends view {
     #get_operation_id(document) {
         //
         // Find the selected radio button for the authentication operation
-        const radio_choice = document.querySelector("input[name='choice']:checked");
-        //
-        // Show an error if no operation is selected
-        if (!radio_choice) {
-            //
-            // mutall error
-            throw new mutall_error("Radio button not selected");
-        }
+        const radio_choice = (this.query_selector("input[name='choice']:checked"));
         //
         // Get the selected operation (login, sign_up, forgot, change)
         const choice = radio_choice.value;
@@ -174,19 +158,12 @@ export class auth extends view {
     #check_login() {
         //
         //get the name input field
-        const name = this.section.querySelector("#login_name input[type='text']");
-        //
-        //check if the name input is present
-        if (!name)
-            throw new mutall_error("name input for login not present");
-        //
+        const name = (this.query_selector("#login_name input[type='text']"));
         //if the value of the input is an empty string set the checker to false
         if (name.value.trim() === "") {
             //
             //get the error span after to the name input element
-            const errospan = this.section.querySelector("#login_name span.error");
-            if (!errospan)
-                throw new mutall_error("error span for name input is missing");
+            const errospan = this.query_selector("#login_name span.error");
             //
             //set the error message to the error span
             errospan.textContent = "This field is required";
@@ -194,19 +171,13 @@ export class auth extends view {
         }
         //
         //get the password input field
-        const password = this.section.querySelector("#login_password input[type='password']");
-        //
-        //check if the name input is present
-        if (!password)
-            throw new mutall_error("name input for login not present");
+        const password = (this.query_selector("#login_password input[type='password']"));
         //
         //if the value of the input is an empty string set the checker to false
         if (password.value.trim() === "") {
             //
             //get the error span after to the name input element
-            const errospan = this.section.querySelector("#login_password span.error");
-            if (!errospan)
-                throw new mutall_error("error span for password input is missing");
+            const errospan = this.query_selector("#login_password span.error");
             //
             //show the error message in the error span
             errospan.textContent = "This field is required";
@@ -221,19 +192,13 @@ export class auth extends view {
         // is missing
         //
         //get the name input field
-        const name = this.section.querySelector("#sign_up_name input[type='text']");
-        //
-        //check if the name input is present
-        if (!name)
-            throw new mutall_error("name input for sign up not present");
+        const name = (this.query_selector("#sign_up_name input[type='text']"));
         //
         //if the value of the input is an empty string set the checker to false
         if (name.value.trim() === "") {
             //
             //get the error span after to the name input element
-            const errospan = this.section.querySelector("#sign_up_name span.error");
-            if (!errospan)
-                throw new mutall_error("error span for name input is missing");
+            const errospan = this.query_selector("#sign_up_name span.error");
             //
             //show the error message in the error span
             errospan.textContent = "This field is required";
@@ -243,19 +208,13 @@ export class auth extends view {
         //get the email input field then check if it has an input
         //
         //get the name input field
-        const email = this.section.querySelector("#sign_up_email input[type='email']");
-        //
-        //check if the email input is present
-        if (!email)
-            throw new mutall_error("email input for sign up not present");
+        const email = (this.query_selector("#sign_up_email input[type='email']"));
         //
         //if the value of the input is an empty string set the checker to false
         if (email.value.trim() === "") {
             //
             //get the error span after to the email input element
-            const errospan = this.section.querySelector("#sign_up_email span.error");
-            if (!errospan)
-                throw new mutall_error("error span for email input is missing");
+            const errospan = this.query_selector("#sign_up_email span.error");
             //
             //show the error message in the error span
             errospan.textContent = "This field is required";
@@ -265,17 +224,13 @@ export class auth extends view {
         //get the password through the label;
         //
         //get the password field
-        const password = this.section.querySelector('#sign_up_password input[type="password"]');
-        if (!password)
-            throw new mutall_error("password field is missing");
+        const password = (this.query_selector('#sign_up_password input[type="password"]'));
         //
         //check if the password field has an input
         if (password.value.trim() === "") {
             //
             //get the error span after to the name input element
-            const errospan = this.section.querySelector("#sign_up_password span.error");
-            if (!errospan)
-                throw new mutall_error("error span for password input is missing");
+            const errospan = this.query_selector("#sign_up_password span.error");
             //
             //show the error message in the error span
             errospan.textContent = "This field is required";
@@ -284,9 +239,7 @@ export class auth extends view {
         //
         //get the password through the label
         //get the password field
-        const confirm_password = this.section.querySelector('#sign_up_confirm input[type="password"]');
-        if (!confirm_password)
-            throw new mutall_error("confirm password field is missing");
+        const confirm_password = (this.query_selector('#sign_up_confirm input[type="password"]'));
         //
         if (confirm_password.value.trim() === "") {
             //
@@ -299,14 +252,10 @@ export class auth extends view {
         if (password.value !== confirm_password.value) {
             //
             // Find the error span to display mismatch message
-            const password_error = this.section.querySelector("#sign_up_password span.error");
-            if (!password_error)
-                throw new mutall_error("password error is missing");
+            const password_error = this.query_selector("#sign_up_password span.error");
             //
             //get the confirm password error span
-            const confirm_error = confirm_password.nextElementSibling;
-            if (!confirm_error)
-                throw new mutall_error("confirm password error is missing");
+            const confirm_error = this.query_selector("#sign_up_confirm span.error");
             //
             // Show error if passwords do not match
             password_error.textContent = "Passwords do not match";
@@ -323,19 +272,13 @@ export class auth extends view {
         // is missing
         //
         //get the name input field
-        const name = this.section.querySelector("input[type='text']");
-        //
-        //check if the name input is present
-        if (!name)
-            throw new mutall_error("name input for sign up not present");
+        const name = this.query_selector("input[type='text']");
         //
         //if the value of the input is an empty string set the checker to false
         if (name.value.trim() === "") {
             //
             //get the error span after to the name input element
-            const errospan = this.section.querySelector('input[type="text"] + span.error');
-            if (!errospan)
-                throw new mutall_error("error span for name input is missing");
+            const errospan = this.query_selector('input[type="text"] + span.error');
             //
             //show the error message in the error span
             errospan.textContent = "This field is required";
@@ -345,19 +288,13 @@ export class auth extends view {
         //get the email input field then check if it has an input
         //
         //get the name input field
-        const email = this.section.querySelector("#forgot_email input[type='email']");
-        //
-        //check if the email input is present
-        if (!email)
-            throw new mutall_error("email input for sign up not present");
+        const email = (this.query_selector("#forgot_email input[type='email']"));
         //
         //if the value of the input is an empty string set the checker to false
         if (email.value.trim() === "") {
             //
             //get the error span after to the email input element
-            const errospan = this.section.querySelector('input[type="email"] + span.error');
-            if (!errospan)
-                throw new mutall_error("error span for email input is missing");
+            const errospan = this.query_selector('input[type="email"] + span.error');
             //
             //show the error message in the error span
             errospan.textContent = "This field is required";
@@ -373,19 +310,13 @@ export class auth extends view {
         // is missing
         //
         //get the name input field
-        const name = this.section.querySelector("#change_name input[type='text']");
-        //
-        //check if the name input is present
-        if (!name)
-            throw new mutall_error("name input for sign up not present");
+        const name = (this.query_selector("#change_name input[type='text']"));
         //
         //if the value of the input is an empty string set the checker to false
         if (name.value.trim() === "") {
             //
             //get the error span after to the name input element
-            const errospan = this.section.querySelector("#change_name span.error");
-            if (!errospan)
-                throw new mutall_error("error span for name input is missing");
+            const errospan = this.query_selector("#change_name span.error");
             //
             //show the error message in the error span
             errospan.textContent = "This field is required";
@@ -395,17 +326,13 @@ export class auth extends view {
         //Collect the passwords
         //
         //get the password field
-        const old_password = this.section.querySelector('#change_old_password input[type="password"]');
-        if (!old_password)
-            throw new mutall_error("old_password field is missing");
+        const old_password = (this.query_selector('#change_old_password input[type="password"]'));
         //
         //check if the old_password field has an input
         if (old_password.value.trim() === "") {
             //
             //get the error span after to the name input element
-            const errospan = this.section.querySelector("#change_old_password span.error");
-            if (!errospan)
-                throw new mutall_error("error span for old password input is missing");
+            const errospan = this.query_selector("#change_old_password span.error");
             //
             //show the error message in the error span
             errospan.textContent = "This field is required";
@@ -413,17 +340,13 @@ export class auth extends view {
         }
         //
         //get the password field
-        const new_password = this.section.querySelector('#change_new_password input[type="password"]');
-        if (!new_password)
-            throw new mutall_error("password field is missing");
+        const new_password = (this.query_selector('#change_new_password input[type="password"]'));
         //
         //check if the password field has an input
         if (new_password.value.trim() === "") {
             //
             //get the error span after to the name input element
-            const errospan = this.section.querySelector("#change_new_password span.error");
-            if (!errospan)
-                throw new mutall_error("error span for password input is missing");
+            const errospan = this.query_selector("#change_new_password span.error");
             //
             //show the error message in the error span
             errospan.textContent = "This field is required";
@@ -433,16 +356,12 @@ export class auth extends view {
         //get the password through the label
         //
         //get the password field
-        const confirm_password = this.section.querySelector('#change_confirm_password input[type="password"]');
-        if (!confirm_password)
-            throw new mutall_error("confirm password field is missing");
+        const confirm_password = (this.query_selector('#change_confirm_password input[type="password"]'));
         //
         if (confirm_password.value.trim() === "") {
             //
             //get the error span after to the name input element
-            const errospan = this.section.querySelector("#change_confirm_password span.error");
-            if (!errospan)
-                throw new mutall_error("error span for password input is missing");
+            const errospan = this.query_selector("#change_confirm_password span.error");
             //
             //show the error message in the error span
             errospan.textContent = "This field is required";
@@ -452,14 +371,10 @@ export class auth extends view {
         if (new_password.value !== confirm_password.value) {
             //
             // Find the error span to display mismatch message
-            const password_error = this.section.querySelector("#change_new_password span.error");
-            if (!password_error)
-                throw new mutall_error("password error is missing");
+            const password_error = this.query_selector("#change_new_password span.error");
             //
             //get the confirm password error span
-            const confirm_error = this.section.querySelector("#change_confirm_password span.error");
-            if (!confirm_error)
-                throw new mutall_error("confirm password error is missing");
+            const confirm_error = this.query_selector("#change_confirm_password span.error");
             //
             // Show error if passwords do not match
             password_error.textContent = "Passwords do not match";
@@ -473,18 +388,10 @@ export class auth extends view {
     #get_login() {
         //
         // Collect the name component of the login credentials
-        const name = this.section.querySelector("#login_name input[type=text]");
-        //
-        // If the name input does not exist,alert the programmer
-        if (!name)
-            throw new mutall_error("name element does not exist");
+        const name = (this.query_selector("#login_name input[type=text]"));
         //
         // Get the password input field
-        const password = this.section.querySelector("#login_password input[type=password]");
-        //
-        // If there is no password field,alert the programmer
-        if (!password)
-            throw new mutall_error("password element does not exist");
+        const password = (this.query_selector("#login_password input[type=password]"));
         //
         // Return the login credentials
         return {
@@ -498,26 +405,15 @@ export class auth extends view {
     #get_sign_up() {
         //
         // Collect the name component of the sign up credentials
-        const name = this.section.querySelector("#sign_up_name input[type=text]");
-        //
-        // If the name input does not exist,alert the programmer
-        if (!name)
-            throw new mutall_error("name element does not exist");
+        const name = (this.query_selector("#sign_up_name input[type=text]"));
         //
         // Get the email and password input fields
-        const email = this.section.querySelector("sign_up_email input[type=email]");
-        if (!email)
-            throw new mutall_error("email element does not exist");
+        const email = (this.query_selector("sign_up_email input[type=email]"));
         //
         //get the password through the label
         //
-        //css selector to get the password field
-        const css = '#sign_up_password input[type="password"]';
-        //
         //get the password field
-        const password = this.section.querySelector(css);
-        if (!password)
-            throw new mutall_error("password field is missing");
+        const password = (this.query_selector('#sign_up_password input[type="password"]'));
         //
         // Return the sign up credentials
         return {
@@ -532,16 +428,10 @@ export class auth extends view {
     #get_forgot() {
         //
         // Collect the name component of the forgot password credentials
-        const name = this.section.querySelector("#forgot_name input[type=text]");
-        //
-        // If the name input does not exist,alert the programmer
-        if (!name)
-            throw new mutall_error("name element does not exist");
+        const name = (this.query_selector("#forgot_name input[type=text]"));
         //
         // Get the email input field
-        const email = this.section.querySelector("#forgot_email input[type=email]");
-        if (!email)
-            throw new mutall_error("email element for forgot section is missing");
+        const email = (this.query_selector("#forgot_email input[type=email]"));
         //
         //return the credentials for forgot password
         return {
@@ -555,27 +445,13 @@ export class auth extends view {
     #get_change() {
         //
         // Collect the name component of the change password credentials
-        const name = this.section.querySelector("#change_name input[type=text]");
-        //
-        // If the name input does not exist,alert the programmer
-        if (!name)
-            throw new mutall_error("name element does not exist");
-        //
-        //css selector to get the password field
-        const password_css = '#change_old_password input[type="password"]';
+        const name = (this.query_selector("#change_name input[type=text]"));
         //
         //get the password field
-        const password = this.section.querySelector(password_css);
-        if (!password)
-            throw new mutall_error("password field is missing");
-        //
-        //css selector to get the new password field
-        const cp_css = '#change_new_password input[type="password"]';
+        const password = (this.query_selector('#change_old_password input[type="password"]'));
         //
         //get the password field
-        const new_password = this.section.querySelector(cp_css);
-        if (!new_password)
-            throw new mutall_error("password field is missing");
+        const new_password = (this.query_selector('#change_new_password input[type="password"]'));
         return {
             operation: "change",
             name: name.value,
@@ -674,15 +550,11 @@ export class auth extends view {
         if (!current_user) {
             //
             //get the error span for the user name
-            const error_span = this.section.querySelector(`#login_name span.error`);
-            if (!error_span)
-                throw new mutall_error(`Error span for User name is missing`);
+            const error_span = this.query_selector(`#login_name span.error`);
             error_span.textContent = "Username does not match password";
             //
             //get the error span for the password
-            const password_error_span = this.section.querySelector(`#login_password span.error`);
-            if (!password_error_span)
-                throw new mutall_error(`Error span for password is missing`);
+            const password_error_span = this.query_selector(`#login_password span.error`);
             password_error_span.textContent = "Password does not match username";
             return;
         }
@@ -692,15 +564,11 @@ export class auth extends view {
         if (!isPasswordVerified) {
             //
             //get the error span for the user name
-            const error_span = this.section.querySelector(`#login_name span.error`);
-            if (!error_span)
-                throw new mutall_error(`Error span for User name is missing`);
+            const error_span = this.query_selector(`#login_name span.error`);
             error_span.textContent = "Username does not match password";
             //
             //get the error span for the password
-            const password_error_span = this.section.querySelector(`#login_password span.error`);
-            if (!password_error_span)
-                throw new mutall_error(`Error span for password is missing`);
+            const password_error_span = this.query_selector(`#login_password span.error`);
             password_error_span.textContent = "Password does not match username";
             return;
         }
@@ -723,9 +591,7 @@ export class auth extends view {
         if (current_user) {
             //
             //get the error span for the user name
-            const error_span = this.section.querySelector(`#sign_up_name span.error`);
-            if (!error_span)
-                throw new mutall_error(`Error span for User name is missing`);
+            const error_span = this.query_selector(`#sign_up_name span.error`);
             error_span.textContent = "User already exists";
             return;
         }
@@ -751,9 +617,7 @@ export class auth extends view {
             //show an error if registration fails
             //
             //get the error span for the user name
-            const error_span = this.section.querySelector(`#sign_up_name span.error`);
-            if (!error_span)
-                throw new mutall_error(`Error span for User name is missing`);
+            const error_span = this.query_selector(`#sign_up_name span.error`);
             error_span.textContent = "Registration Failed.Try again";
             return;
         }
@@ -769,15 +633,11 @@ export class auth extends view {
         if (!current_user) {
             //
             //get the error span for the user name
-            const error_span = this.section.querySelector(`#forgot_name span.error`);
-            if (!error_span)
-                throw new mutall_error(`Error span for User name is missing`);
+            const error_span = this.query_selector(`#forgot_name span.error`);
             error_span.textContent = "Username does not match email";
             //
             //get the error span for the email
-            const email_error = this.section.querySelector(`#forgot_email span.error`);
-            if (!email_error)
-                throw new mutall_error(`Error span for email is missing`);
+            const email_error = this.query_selector(`#forgot_email span.error`);
             email_error.textContent = "Email does not match username";
             return;
         }
@@ -800,15 +660,11 @@ export class auth extends view {
         if (!current_user) {
             //
             //get the error span for the user name
-            const error_span = this.section.querySelector(`#change_name span.error`);
-            if (!error_span)
-                throw new mutall_error(`Error span for User name is missing`);
+            const error_span = this.query_selector(`#change_name span.error`);
             error_span.textContent = "Username does not match password";
             //
             //get the error span for the password
-            const password_error_span = this.section.querySelector(`#change_old_password span.error`);
-            if (!password_error_span)
-                throw new mutall_error(`Error span for new password is missing`);
+            const password_error_span = this.query_selector(`#change_old_password span.error`);
             password_error_span.textContent = "Password does not match username";
             return;
         }
@@ -817,15 +673,11 @@ export class auth extends view {
         if (!isPasswordVerified) {
             //
             //get the error span for the user name
-            const error_span = this.section.querySelector(`#change_name span.error`);
-            if (!error_span)
-                throw new mutall_error(`Error span for User name is missing`);
+            const error_span = this.query_selector(`#change_name span.error`);
             error_span.textContent = "Username does not match password";
             //
             //get the error span for the password
-            const password_error_span = this.section.querySelector(`#change_old_password span.error`);
-            if (!password_error_span)
-                throw new mutall_error(`Error span for new password is missing`);
+            const password_error_span = this.query_selector(`#change_old_password span.error`);
             password_error_span.textContent = "Password does not match username";
             return;
         }

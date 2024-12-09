@@ -1,0 +1,68 @@
+  #validate_required_fields(fieldset: HTMLElement): void {
+    //
+    //Get all the inputs in the fieldset
+    const inputs = fieldset.querySelectorAll(
+      'input:not([type="radio"])'
+    ) as NodeListOf<HTMLInputElement>;
+
+    //
+    //Iterate through each input to check if a input has been proveided
+    inputs.forEach((input) => {
+      //
+      //set the error of this input to empty
+      const errorSpan = input
+        .closest("label")
+        ?.querySelector(".error") as HTMLSpanElement;
+      errorSpan.textContent = "";
+      //
+      //if the value of the input is an empty string set the checker to false
+      if (input.value.trim() === "") {
+        errorSpan.textContent = "This field is required";
+        return;
+      }
+    });
+  }
+
+
+
+  //
+    //Iterate through each input to check if a input has been proveided
+    labels.forEach((label) => {
+        //
+        //set the error of this input to empty
+        const error_span: HTMLSpanElement | null =label.querySelector(".error")
+        if (!error_span) {
+          throw new mutall_error(`Error span for ${fieldset.id} not present`);
+        }
+        error_span.textContent = "";
+        //
+        //if the value of the input is an empty string set the checker to false
+        const input=label.querySelector("input");
+        if(!input){
+          throw new mutall_error("input not found")
+        }
+        if (input.value.trim() === "") {
+          error_span.textContent = "This field is required";
+          return;
+        }
+    })
+
+
+        //
+    //Iterate through each input to check if a input has been proveided
+    inputs.forEach((input) => {
+        //
+        //set the error of this input to empty
+        const error_span: Element | null =
+          input.nextElementSibling
+        if (!error_span) {
+          throw new mutall_error(`Error span for ${fieldset.id} not present`);
+        }
+        error_span.textContent = "";
+        //
+        //if the value of the input is an empty string set the checker to false
+        if (input.value.trim() === "") {
+          error_span.textContent = "This field is required";
+          return;
+        }
+      });
