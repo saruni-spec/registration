@@ -22,8 +22,6 @@
 </head>
 <body>
     <form id="auth"  oninput="iauth.clear_errors()">
-        <span class="error" id="form_error"></span>
-<!-- --------------------------------------------------------------- -->
         <fieldset id="login">
             <label class="radio">
                 <input type="radio" name="choice" value="login"/>
@@ -43,11 +41,16 @@
             </label>
 
         </fieldset>
-<!-- ---------------------------------------------------------------------- -->
         <fieldset id="sign_up">
             <label class="radio">
                 <input type="radio" name="choice" value="sign_up"/>
                 Sign up
+            </label>
+            <label>
+                <span>User Name</span>
+                <input type="text"/>
+                
+                <span class="error"></span>
             </label>
             <label>
                 <span>Email</span>
@@ -55,12 +58,7 @@
                 
                 <span class="error"></span>
             </label>
-            <label>
-                <span>Username</span>
-                <input type="text"/>
-                
-                <span class="error"></span>
-            </label>
+           
             <label>
                 <span>Password</span>
                 <input type="password" />
@@ -80,7 +78,7 @@
                 Forgot Password
             </label>
             <label>
-            <span>Username</span>
+            <span>User Name</span>
                 <input type="text" />
                 
                 <span class="error"></span>
@@ -98,7 +96,7 @@
                 Change Password
             </label>
             <label>
-            <span>Username</span>
+            <span>User Name</span>
                 <input type="text" />
                 
                 <span class="error"></span>
