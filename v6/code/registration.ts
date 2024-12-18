@@ -1,7 +1,7 @@
 import { layout } from "../../../schema/v/code/questionnaire.js";
 import { mutall_error, view } from "../../../schema/v/code/schema.js";
 import { user } from "../../../outlook/v/code/app.js";
-import { tr } from "../../../outlook/v/code/crud.js";
+
 //
 // Custom authentication (login, sign_up, and forgot password) for mutall
 // Allows a user to register,login,change their password and logout out
@@ -30,11 +30,11 @@ export class auth extends view {
     this.#clear_field_errors();
     //
     // Clear errors in other sections
-    this.#clear_other_errors();
+    this.#clear_other_sections();
   }
   //
   //clear errors in other sections other than the selected section
-  #clear_other_errors(): void {
+  #clear_other_sections(): void {
     //
     // Define the sections to check
     const sections = ["login", "sign_up", "forgot", "change"];
