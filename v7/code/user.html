@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <script type="module">
+        import { auth } from "./registration.js";
+        
+        const iauth = new auth();
+        
+        function page_content(current_user) {
+            const page = document.body;
+            
+            if (current_user) {
+                page.innerHTML = `
+                    <p>Welcome, ${current_user.name}!</p>
+                    <button id="logoutBtn">Logout</button>
+                `;
+                //
+                // Add the logout method to the button
+                document.getElementById('logoutBtn').addEventListener('click', () => iauth.logout());
+            } else {
+                page.innerHTML = `
+                    <p>No user logged in.</p>
+                    <button id="signInBtn">Sign In</button>
+                `;
+                // 
+                // Add the sign_in method to the button
+                document.getElementById('signInBtn').addEventListener('click', () => iauth.sign_in());
+            }
+        }
+
+        window.onload = () => {
+            const current_user = iauth.current_user();
+            page_content(current_user);
+        }
+
+    </script>
+</head>
+<body>
+</body>
+</html>
