@@ -2,10 +2,11 @@ import { layout } from "../../../schema/v/code/questionnaire.js";
 import { mutall_error, view } from "../../../schema/v/code/schema.js";
 import { user } from "../../../outlook/v/code/app.js";
 //
-// Custom authentication (login, sign_up, and forgot password) for mutall
-// Allows a user to register,login,change their password and logout out
-// Keeps track of the logged in user for further reference in other contexts
-export class auth extends view {
+// The `authoriser` class extends the `view` class and provides methods for user authentication,
+// including login, sign-up, password reset, and password change. It also handles error clearing,
+// user session management, and input validation.
+//
+export class authoriser extends view {
   //
   // This is the registration page
   static registration_page: string = "registration.html";
@@ -16,64 +17,93 @@ export class auth extends view {
   //Declare a user property
   public user?: user;
   //
-  // This is the current section
-  public section?: section;
-  //
   //Create the constrctor of the class,adding the constructor of its parent class
   constructor() {
     super();
   }
   clear_errors(): void {
     //
-    // Get the selected fieldset
-    const selected_fieldset = this.#get_section();
+    // Clear errors on input change in any of the sections
+    this.#clear_input_errors();
     //
-    // Clear errors on input change in the selected fieldset
-    // Get all the label sections in the selected fieldset (excluding radio labels)
-    const label_sections =
-      selected_fieldset.querySelectorAll("label:not(.radio)");
-    label_sections.forEach((label) => {
-      //
-      // Get the input element in this label section
-      const input = <HTMLInputElement>this.query_selector(`#${label.id} input`);
-      //
-      // Add listeners to the inputs in the selected fieldset
-      input.addEventListener("input", (event) => {
-        // Get the error span for the input
-        const error_span: Element | null = label.querySelector(".error");
-        //
-        // Clear the error message in the error span
-        if (error_span) error_span.textContent = "";
-      });
-    });
-
+    //Clear errors in ohter sections when a different section is selected
+    //Get the selected section
+    const current = this.#get_current_section();
+    //
+    //
+    if (!current.element) return;
+    //
+    // Clear errors in other sections
+    this.#clear_other_sections(current.element);
+  }
+  #clear_other_sections(selected_fieldset: HTMLElement): void {
+    //
     // Define the sections to check
-    const sections = ["login", "sign_up", "forgot", "change"];
+    const operations: operation_id[] = ["login", "sign_up", "forgot", "change"];
     //
     // Iterate through sections and clear errors if not selected
-    sections.forEach((section_name) => {
+    operations.forEach((operation) => {
       //
       // Get the section element
-      const section = this.get_element(section_name);
+      const section = this.get_element(operation);
       //
       // If this section is not the selected one, clear its errors
       if (section && section !== selected_fieldset) {
-        //
-        // Get all label sections that are not radio buttons
-        const label_sections = section.querySelectorAll("label:not(.radio)");
-        //
-        // Clear the errors for each input
-        label_sections.forEach((label_section) => {
-          //
-          // Get the error span element in that label section
-          const error_span: Element = this.query_selector(
-            `#${label_section.id} span.error`
-          );
-          //
-          // Clear the error message in the error span
-          error_span.textContent = "";
-        });
+        this.#clear_errors_in_section(section);
       }
+    });
+  }
+  //
+  // Clear the errors in the selected fieldset
+  #clear_errors_in_section(section: HTMLElement): void {
+    //
+    // Get all label sections that are not radio buttons
+    const label_sections = section.querySelectorAll("label:not(.radio)");
+    //
+    // Clear the errors for each input
+    label_sections.forEach((label_section) => {
+      //
+      // Get the error span element in that label section
+      const error_span: Element = this.query_selector(
+        `#${label_section.id} span.error`
+      );
+      //
+      // Clear the error message in the error span
+      error_span.textContent = "";
+    });
+  }
+  //
+  // Get the label sections in the selected fieldset
+  // Clear errors on input change for each label section
+  #clear_input_errors(): void {
+    //
+    // Clear errors on input change in all the label sections
+    // Get all the label sections in the selected fieldset (excluding radio labels)
+    const label_sections = document.querySelectorAll("label:not(.radio)");
+    //
+    // Find the input in each label section and add an event listener to it
+    label_sections.forEach((label) => {
+      //
+      // Clear errors on input change in the selected field
+      this.#clear_errors_on_input_change(label);
+    });
+  }
+  //
+  // Add an oninput event listener to the input field in the selected label
+  // Clear the error message when the user starts typing
+  #clear_errors_on_input_change(label: Element): void {
+    //
+    // Get the input element in this label section
+    const input = <HTMLInputElement>this.query_selector(`#${label.id} input`);
+    //
+    // Add listeners to the inputs in the selected fieldset
+    input.addEventListener("input", (event) => {
+      //
+      // Get the error span for the input
+      const error_span: Element | null = label.querySelector(".error");
+      //
+      // Clear the error message in the error span
+      this.#set_error_message(`${label.id}`, "");
     });
   }
   //
@@ -87,45 +117,36 @@ export class auth extends view {
     event.preventDefault();
     //
     //Get the relevant section that has the inputs
-    this.section = this.#get_section();
+    const current: section = this.#get_current_section();
     //
-    //Check and get user credentials,if they are valid,submit them for authentication
-    //Otherwise,we abort the submission
-    const inps: credential | undefined = this.#get_credentials();
+    //Check the credentials for the current section
+    const valid: boolean = this.#check_credentials(current.credential);
     //
-    //Abort the submission if the credentials are not defined
-    if (!inps) return;
+    //Abort the submission if the credentials are not valid
+    if (!valid) return;
     //
     // Use the credentials to authenticate the user.
     // If not successful,abort the submission
-    const user: user | undefined = await this.#authenticate_user(inps);
+    const user: user | undefined = await this.#authenticate_user(
+      current.credential
+    );
     //
     //If the authentication fails,abort the submission
     if (!user) return;
     //
     //Save the authenticated user for further reference to complete the submission
     this.user = user;
-    console.log(this.user, "user");
     //
     //Save the user to local strorage
     localStorage.setItem(
-      auth.user_key,
+      authoriser.user_key,
       JSON.stringify({ name: user.name, key: user.pk })
     );
-    //
-    //Get the previous page the user was on before logging in from local storage
-    const previous_page = localStorage.getItem("previous_page");
-    //
-    //Redirect the user to the previous page they were on before logging in
-    if (previous_page) {
-      window.location.href = previous_page;
-    }
   }
-
   //
   // Check inputs and report all potential errors
   // Performs comprehensive validation on the inputs to check any errors
-  #check_inputs(credentials: credential): boolean {
+  #check_credentials(credentials: credential): boolean {
     //
     // Perform operation-specific input collection and validation
     //
@@ -149,15 +170,18 @@ export class auth extends view {
   }
   //
   //
-  #get_section(): HTMLElement {
+  #get_current_section(): section {
     //
     //get the selected operation
     const choice: operation_id = this.#get_operation_id();
     //
     // Find the fieldset corresponding to the selected operation
-    const field_set = this.get_element(choice);
-    this.section = field_set;
-    return field_set;
+    const field_set: HTMLElement = this.get_element(choice);
+    //
+    // Get the credentials for the current operation
+    const credentials = this.#get_inputs(field_set);
+
+    return { element: field_set, credential: credentials };
   }
   //
   //Get the operation id from the selected radio button on the form
@@ -173,14 +197,13 @@ export class auth extends view {
     return <operation_id>choice;
   }
   //
-  // Method to set an error message for a specific field
+  // Set an error message for a specific field
   // Takes the field's selector and the error message as parameters
-  set_error_message(field_id: string, error_message: string): void {
+  #set_error_message(label_id: string, error_message: string): void {
+    const label = this.get_element(label_id);
     //
-    // Find the error span element associated with the input field
-    let error_span: Element | null = document.querySelector(
-      `${field_id} span.error`
-    );
+    // Find the error span element in the label section
+    let error_span: Element | null = label.querySelector(`span.error`);
     //
     //Create a new error span if it does not exist
     if (!error_span) {
@@ -192,33 +215,15 @@ export class auth extends view {
       error_span.className = "error";
       //
       // Append the new span element to the field's label
-      this.query_selector(field_id).appendChild(error_span);
+      label.appendChild(error_span);
     }
     //
     // Set the text content of the error span to display the error message
     error_span.textContent = error_message;
   }
   //
-  // Method to check if a field is empty and set an error if it is
-  // Takes the field's value and its selector as parameters
-  #input_empty(field_value: string, field_id: string): boolean {
-    //
-    // Check if the field value is an empty string
-    if (field_value === "") {
-      //
-      // If empty, call setFieldError to display a "required" message
-      this.set_error_message(field_id, "This field is required");
-      //
-      // Return false to indicate that the field is empty
-      return true;
-    }
-    //
-    // Return true if the field has a value
-    return false;
-  }
-  //
   //Check if an email is valid
-  email_valid(email: string): boolean {
+  #email_valid(email: string): boolean {
     //
     // \b                - Ensure the email starts and ends as a whole word.
     // [A-Za-z0-9._%+-]+ - Matches one or more characters that can be uppercase/lowercase letters, digits, dots (.), underscores (_), percent signs (%), plus signs (+), or hyphens (-). This is the local part of the email (before the @).
@@ -232,6 +237,49 @@ export class auth extends view {
     return valid_email.test(email);
   }
   //
+  // Check the provided fields to ensure they are not empty
+  #validate_required_fields(
+    fields: { value: string; selector: string; message: string }[]
+  ): boolean {
+    //
+    // Assume all fields are valid
+    let are_valid = true;
+    //
+    // For each field, check if it is empty and display an error message if it is
+    for (const field of fields) {
+      //
+      // Check if the field is empty
+      // Use trim to remove any white spaces
+      if (field.value.trim() === "") {
+        //
+        // If empty, display an error message
+        this.#set_error_message(field.selector, field.message);
+        //
+        // Set are_valid to false if any field is empty
+        are_valid = false;
+      }
+    }
+
+    return are_valid;
+  }
+  //
+  //
+  //Check if a password and its confirmation match
+  #validate_passwords_match(
+    password: string,
+    confirmPassword: string,
+    selectors: [string, string]
+  ): boolean {
+    //
+    //
+    if (password !== confirmPassword) {
+      this.#set_error_message(selectors[0], "Passwords do not match");
+      this.#set_error_message(selectors[1], "Passwords do not match");
+      return false;
+    }
+    return true;
+  }
+  //
   // Validate login credentials
   #check_login(credentials: credential): boolean {
     //
@@ -240,23 +288,19 @@ export class auth extends view {
       return false;
     }
     //
-    // Validate name field by checking whether or not they are empty
-    // Passes the name value and the selector for the name input's error span
-    if (credentials.name === "") {
-      //
-      // If empty, call setFieldError to display a "required" message
-      this.set_error_message("#login_name", "This field is required");
-      return false;
-    }
-    //
-    // Validate password field by checking whether or not they are empty
-    if (credentials.password === "") {
-      //
-      // If empty, call setFieldError to display a "required" message
-      this.set_error_message("#login_password", "This field is required");
-      return false;
-    }
-    return true;
+    // Validate name field and password field by checking whether or not they are empty
+    return this.#validate_required_fields([
+      {
+        value: credentials.name,
+        selector: "#login_name",
+        message: "This field is required",
+      },
+      {
+        value: credentials.password,
+        selector: "#login_password",
+        message: "This field is required",
+      },
+    ]);
   }
   //
   // Validate sign up details with comprehensive checks
@@ -269,59 +313,45 @@ export class auth extends view {
     //
     // Validate each input field by checking whether or not they are empty
     // Check the name, email, password, and confirm password fields
-    // Check the name field
-    if (credentials.name === "") {
-      //
-      // If empty, display an error message
-      this.set_error_message("#sign_up_name", "This field is required");
-      return false;
-    }
-    //
-    // Check the email field
-    if (credentials.email === "") {
-      //
-      // If empty, display an error message
-      this.set_error_message("#sign_up_email", "This field is required");
-      return false;
-    }
+    const values_valid = this.#validate_required_fields([
+      {
+        value: credentials.name,
+        selector: "sign_up_name",
+        message: "This field is required",
+      },
+      {
+        value: credentials.email,
+        selector: "sign_up_email",
+        message: "This field is required",
+      },
+      {
+        value: credentials.password,
+        selector: "sign_up_password",
+        message: "This field is required",
+      },
+      {
+        value: credentials.confirm_password,
+        selector: "sign_up_confirm",
+        message: "This field is required",
+      },
+    ]);
     //
     // Check if the email is valid
-    if (!this.email_valid(credentials.email)) {
+    if (!this.#email_valid(credentials.email)) {
       //
       // If empty, display an error message
-      this.set_error_message("#sign_up_email", "Invalid email");
-      return false;
-    }
-    //
-    // Check the password field
-    if (credentials.password === "") {
-      //
-      // If empty, display an error message
-      this.set_error_message("#sign_up_password", "This field is required");
-      return false;
-    }
-    //
-    // Check the confirm password field
-    if (credentials.confirm_password === "") {
-      //
-      // If empty, display an error message
-      this.set_error_message("#sign_up_confirm", "This field is required");
+      this.#set_error_message("sign_up_email", "Invalid email");
       return false;
     }
     //
     // Check to ensure passwords match
-    // Only perform this check if both password fields are non-empty
-    const passwords_match: boolean =
-      credentials.password === credentials.confirm_password;
-    //
-    // If the passwords do not match, show an error message
-    if (!passwords_match) {
-      this.set_error_message("#sign_up_password", "Passwords do not match");
-      this.set_error_message("#sign_up_confirm", "Passwords do not match");
-      return false;
-    }
+    const doPasswordsMatch = this.#validate_passwords_match(
+      credentials.password,
+      credentials.confirm_password,
+      ["sign_up_password", "sign_up_confirm"]
+    );
 
-    return true;
+    return values_valid && doPasswordsMatch;
   }
   //
   // Validate forgot password details
@@ -333,27 +363,26 @@ export class auth extends view {
     }
     //
     // Validate name and email fields by checking whether or not they are empty
-    // Check the name field
-    if (credentials.name === "") {
-      //
-      // If empty, display an error message
-      this.set_error_message("#forgot_name", "This field is required");
-      return false;
-    }
+    const values_valid = this.#validate_required_fields([
+      {
+        value: credentials.name,
+        selector: "forgot_name",
+        message: "This field is required",
+      },
+      {
+        value: credentials.email,
+        selector: "forgot_email",
+        message: "This field is required",
+      },
+    ]);
     //
-    // Validate email field
-    if (credentials.email === "") {
-      //
-      // If empty, display an error message
-      this.set_error_message("#forgot_email", "This field is required");
-      return false;
-    }
+    if (!values_valid) return false;
     //
     // Check if the email is valid
-    if (!this.email_valid(credentials.email)) {
+    if (!this.#email_valid(credentials.email)) {
       //
       // If empty, display an error message
-      this.set_error_message("#sign_up_email", "Invalid email");
+      this.#set_error_message("forgot_email", "Invalid email");
       return false;
     }
     return true;
@@ -369,70 +398,65 @@ export class auth extends view {
     //
     // Validate each input field by checking whether or not they are empty
     // Check the name, old password, new password, and confirm password fields
-    // Check the name field
-    if (credentials.name === "") {
-      //
-      // If empty, display an error message
-      this.set_error_message("#change_name", "This field is required");
-      return false;
-    }
-    //
-    // Check the old password field
-    if (credentials.old_password === "") {
-      //
-      // If empty, display an error message
-      this.set_error_message("#change_old_password", "This field is required");
-      return false;
-    }
-    //
-    // Check the new password field
-    if (credentials.new_password === "") {
-      //
-      // If empty, display an error message
-      this.set_error_message("#change_new_password", "This field is required");
-      return false;
-    }
-    //
-    // Check the confirm password field
-    if (credentials.confirm_password === "") {
-      //
-      // If empty, display an error message
-      this.set_error_message(
-        "#change_confirm_password",
-        "This field is required"
-      );
-      return false;
-    }
+    const valid_values = this.#validate_required_fields([
+      {
+        value: credentials.name,
+        selector: "change_name",
+        message: "This field is required",
+      },
+      {
+        value: credentials.old_password,
+        selector: "change_old_password",
+        message: "This field is required",
+      },
+      {
+        value: credentials.new_password,
+        selector: "change_new_password",
+        message: "This field is required",
+      },
+      {
+        value: credentials.confirm_password,
+        selector: "change_confirm_password",
+        message: "This field is required",
+      },
+    ]);
     //
     // Check to ensure new passwords match
-    // Only perform this check if both new password fields are non-empty
-    const passwords_match =
-      credentials.new_password === credentials.confirm_password;
+    const doPasswordsMatch = this.#validate_passwords_match(
+      credentials.new_password,
+      credentials.confirm_password,
+      ["change_new_password", "change_confirm_password"]
+    );
+
+    return valid_values && doPasswordsMatch;
+  }
+  //
+  //Get an input element from a section by its name
+  get_input_element(name: string, section: HTMLElement): HTMLInputElement {
     //
-    // If the passwords do not match, show an error message
-    if (!passwords_match) {
-      this.set_error_message("#change_new_password", "Passwords do not match");
-      this.set_error_message(
-        "#change_confirm_password",
-        "Passwords do not match"
-      );
-      return false;
-    }
-    return true;
+    //Get the the element from the section
+    const element = section.querySelector(`#${name}`);
+    //
+    //Check if the element is an HTML Input Element
+    if (!(element instanceof HTMLInputElement))
+      throw new mutall_error(`HTML Input ELement expected at ${name}`);
+    //
+    //Return the element
+    return element;
   }
   //
   // Collect the login credentials
-  #get_login(): credential {
+  #get_login(section: HTMLElement): {
+    operation: "login";
+    name: string;
+    password: string;
+  } {
     //
     // Collect the name component of the login credentials
-    const name = <HTMLInputElement>(
-      this.query_selector("#login_name input[type=text]")
-    );
+    const name = this.get_input_element("name", section);
     //
     // Get the password input field
-    const password = <HTMLInputElement>(
-      this.query_selector("#login_password input[type=password]")
-    );
+    const password = this.get_input_element("password", section);
     //
     // Return the login credentials
     return {
@@ -443,28 +467,27 @@ export class auth extends view {
   }
   //
   // Handle sign up credentials extraction
-  #get_sign_up(): credential {
+  #get_sign_up(section: HTMLElement): {
+    operation: "sign_up";
+    name: string;
+    email: string;
+    password: string;
+    confirm_password: string;
+  } {
     //
     // Collect the name component of the sign up credentials
-    const name = <HTMLInputElement>(
-      this.query_selector("#sign_up_name input[type=text]")
-    );
+    const name = this.get_input_element("name", section);
     //
     // Get the email and password input fields
-    const email = <HTMLInputElement>(
-      this.query_selector("#sign_up_email input[type=email]")
-    );
-    //
-    //get the password through the label
+    const email = this.get_input_element("email", section);
     //
     //get the password field
-    const password = <HTMLInputElement>(
-      this.query_selector('#sign_up_password input[type="password"]')
-    );
+    const password = this.get_input_element("password", section);
     //
     //get the confirm password through the label
-    const confirm_password = <HTMLInputElement>(
-      this.query_selector("#sign_up_confirm input[type='password']")
+    const confirm_password = this.get_input_element(
+      "confirm_password",
+      section
     );
     //
     // Return the sign up credentials
@@ -478,17 +501,13 @@ export class auth extends view {
   }
   //
   // Handle forgot password credentials extraction
-  #get_forgot(): credential {
+  #get_forgot(section: HTMLElement): credential {
     //
     // Collect the name component of the forgot password credentials
-    const name = <HTMLInputElement>(
-      this.query_selector("#forgot_name input[type=text]")
-    );
+    const name = this.get_input_element("name", section);
     //
     // Get the email input field
-    const email = <HTMLInputElement>(
-      this.query_selector("#forgot_email input[type=email]")
-    );
+    const email = this.get_input_element("email", section);
     //
     //return the credentials for forgot password
     return {
@@ -499,26 +518,21 @@ export class auth extends view {
   }
   //
   // Handle change password credentials extraction
-  #get_change(): credential {
+  #get_change(section: HTMLElement): credential {
     //
     // Collect the name component of the change password credentials
-    const name = <HTMLInputElement>(
-      this.query_selector("#change_name input[type=text]")
-    );
+    const name = this.get_input_element("name", section);
     //
     //get the password field
-    const old_password = <HTMLInputElement>(
-      this.query_selector('#change_old_password input[type="password"]')
-    );
+    const old_password = this.get_input_element("old_password", section);
     //
     //get the password field
-    const new_password = <HTMLInputElement>(
-      this.query_selector('#change_new_password input[type="password"]')
-    );
+    const new_password = this.get_input_element("new_password", section);
     //
     //get the password field
-    const confirm_password = <HTMLInputElement>(
-      this.query_selector('#change_confirm_password input[type="password"]')
+    const confirm_password = this.get_input_element(
+      "confirm_password",
+      section
     );
     //
     //return the credentials for changing password
@@ -533,54 +547,33 @@ export class auth extends view {
   //
   // Collect the credentials based on the current operation
   // The validated inputs are in the form section under the given fieldset
-  #get_inputs(): credential {
-    //
-    // Get the current operation
-    const operation = <operation_id>this.section!.id;
+  #get_inputs(current: HTMLElement): credential {
     //
     //Call the appropriate method to get the credentials based on the operation
-    switch (operation) {
+    switch (current.id) {
       case "login":
         //
         // Collect and return the login credentials
-        return this.#get_login();
+        return this.#get_login(current);
       case "sign_up":
         //
         // Collect and return the sign_up credentials
-        return this.#get_sign_up();
+        return this.#get_sign_up(current);
       case "forgot":
         //
         // Collect and return the forgot password credentials
-        return this.#get_forgot();
+        return this.#get_forgot(current);
       case "change":
         //
         // Collect and return the change password credentials
-        return this.#get_change();
+        return this.#get_change(current);
       default:
-        throw new mutall_error(`Unsupported operation: ${operation}`);
+        throw new mutall_error(`Unsupported operation: ${current.id}`);
     }
   }
   //
-  // Main method to get credentials
-  // Combines input checking and credentials collections
-  #get_credentials(): credential | undefined {
-    //
-    // Collect and return the credentials
-    const credentials: credential = this.#get_inputs();
-    //
-    // Check the form inputs returning the section that represents the
-    // current operation
-    const inputs_valid: boolean = this.#check_inputs(credentials);
-    //
-    // Discontinue the process if there are errors
-    if (!inputs_valid) return;
-    return credentials;
-  }
-  //
   // Authenticates a user based on the operation type (login, registration, etc.)
-  async #authenticate_user(
-    credentials: credential
-  ): Promise<user | undefined> {
+  async #authenticate_user(credentials: credential): Promise<user | undefined> {
     //
     //Use a switch to handle different authentication operations
     switch (credentials.operation) {
@@ -623,10 +616,10 @@ export class auth extends view {
     //If the user does not exist,show an error message
     if (!current_user) {
       //
-      this.set_error_message("#login_name", "Username does not match password");
+      this.#set_error_message("login_name", "Username does not match password");
       //
-      this.set_error_message(
-        "#login_password",
+      this.#set_error_message(
+        "login_password",
         "Password does not match username"
       );
       return;
@@ -644,13 +637,13 @@ export class auth extends view {
     if (!isPasswordVerified) {
       //
       //get the error span for the user name
-      this.set_error_message(
-        "#login_name",
+      this.#set_error_message(
+        "login_name",
         "User name does not match password"
       );
       //
-      this.set_error_message(
-        "#login_password",
+      this.#set_error_message(
+        "login_password",
         "Password does not match user name"
       );
       return;
@@ -675,7 +668,7 @@ export class auth extends view {
     //If the user already exists,show an error message
     if (current_user) {
       //
-      this.set_error_message("#sign_up_name", "User already exists");
+      this.#set_error_message("sign_up_name", "User already exists");
       return;
     }
     //
@@ -703,7 +696,7 @@ export class auth extends view {
     if (response !== "ok") {
       //
       //show an error if registration fails
-      this.set_error_message("#sign_up_name", "Registration failed");
+      this.#set_error_message("sign_up_name", "Registration failed");
       return;
     }
     const new_user = await this.#check_user(credentials.name);
@@ -719,9 +712,9 @@ export class auth extends view {
     // If the user does not exist, show an error message
     if (!current_user) {
       //
-      this.set_error_message("#forgot_name", "Username does not match email");
+      this.#set_error_message("forgot_name", "Username does not match email");
       //
-      this.set_error_message("#forgot_email", "Email does not match username");
+      this.#set_error_message("forgot_email", "Email does not match username");
       return;
     }
     //
@@ -746,13 +739,13 @@ export class auth extends view {
     // If the user does not exist, show an error message
     if (!current_user) {
       //
-      this.set_error_message(
-        "#change_name",
+      this.#set_error_message(
+        "change_name",
         "Username does not match password"
       );
       //
-      this.set_error_message(
-        "#change_old_password",
+      this.#set_error_message(
+        "change_old_password",
         "Password does not match username"
       );
       return;
@@ -769,13 +762,13 @@ export class auth extends view {
     // If the password does not match the username, show an error message
     if (!isPasswordVerified) {
       //
-      this.set_error_message(
-        "#change_name",
+      this.#set_error_message(
+        "change_name",
         "Username does not match password"
       );
       //
-      this.set_error_message(
-        "#change_old_password",
+      this.#set_error_message(
+        "change_old_password",
         "Password does not match username"
       );
       return;
@@ -850,20 +843,20 @@ export class auth extends view {
     localStorage.setItem("previous_page", previous_page);
     //
     //redirect the user to the authentication page
-    window.location.href = auth.registration_page;
+    window.location.href = authoriser.registration_page;
   }
   //
   // Log out the current user by clearing the memory and local storage
   async logout(): Promise<void> {
     //
     //Remove the session from local storage
-    localStorage.removeItem(auth.user_key);
+    localStorage.removeItem(authoriser.user_key);
     //
     //Clear the user from memory
     this.user = undefined;
     //
     //Redirect the user to the authentication page
-    window.location.href = auth.registration_page;
+    window.location.href = authoriser.registration_page;
   }
   // Check if a user is currently logged in and returns their details if available
   current_user(): user | undefined {
@@ -874,7 +867,7 @@ export class auth extends view {
     }
     //
     // Check if a session is available in local storage
-    const session = localStorage.getItem(auth.user_key);
+    const session = localStorage.getItem(authoriser.user_key);
     //
     // If a session is found, parse and set this.user, then return it
     if (session) {
@@ -889,31 +882,60 @@ export class auth extends view {
   }
 }
 //
-// 
-type operation_id = "login" | "sign_up" | "forgot" | "change";
+//
+type section = { element: HTMLElement; credential: credential };
 //
 // (Operation types can be derived from the credentials)
 // type operation_id= x<credentials>;
 //
 // Credentials is a structure for holding the data from various sections
 // for authentication
-type credential =
-    { operation: "login"; name: string; password: string }
-  | {
-      operation: "sign_up";
-      name: string;
-      email: string;
-      password: string;
-      confirm_password: string;
-    }
-  | { operation: "forgot"; name: string; email: string }
-  | {
-      operation: "change";
-      name: string;
-      old_password: string;
-      new_password: string;
-      confirm_password: string;
-    };
+//
+type login = { operation: "login"; name: string; password: string };
+type sign_up = {
+  operation: "sign_up";
+  name: string;
+  email: string;
+  password: string;
+  confirm_password: string;
+};
+type forgot = { operation: "forgot"; name: string; email: string };
+type change = {
+  operation: "change";
+  name: string;
+  old_password: string;
+  new_password: string;
+  confirm_password: string;
+};
 
+type credential = login | sign_up | forgot | change;
+//
+//
+// type operation_id = discriminant<credential>;
+type operation_id = discriminator.discriminant_values<credential, "operation">;
 
-type section={element:HTMLElement ,credential:credential};
+// A space for the dis
+namespace discriminator {
+  //
+  //Extract all the possible keys in any given type
+  type key<T> = keyof T;
+  //
+  //Identify the unique property that are common across all the members of the union and used to
+  //differentiate between them
+  //TODO: Read about conditional types ??????????????????
+  //
+  //Iterate through all the menbers in a union type and check if the given discriminant key exists.and
+  //if it does we proceed to extract the value associated with that key
+  export type discriminant_values<
+    //
+    //The union type
+    T,
+    //
+    //The discriminant in the union type
+    K extends keyof T
+  > = T extends { [p in K]: infer V } ? V : never;
+  //
+  // Defome a utility type that will extract all the possible variants of a discriminant
+  // type discriminant<T> = discriminant_values<T, discriminant_key<T>>;
+  //
+}

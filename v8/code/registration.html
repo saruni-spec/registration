@@ -6,13 +6,13 @@
     <title>Registration Form using Mutall Principles</title>
     <link rel="stylesheet" href="registration.css"/>
     <script type="module">
-        import {auth} from "./registration.js";
+        import {authoriser} from "./registration.js";
         //
         //After the page loads,create an instance of the auth class and show 
         document.addEventListener("DOMContentLoaded", () => {
              //
              //Create an instance of the auth class
-             const iauth=new auth();
+             const iauth=new authoriser();
              //
              //Allow the iauth variable to be accessed outside this script
              window.iauth=iauth;
@@ -27,14 +27,14 @@
                 <input type="radio" name="choice" value="login"/>
                 Login
             </label>
-            <label id="login_name">
+            <label>
                 <span>User Name</span>
-                <input type="text" />
+                <input name="name" type="text" />
                 <span class="error"></span>
             </label>
-            <label id="login_password">
+            <label >
                 <span>Password</span>
-                <input  type="password" />
+                <input name="password"  type="password" />
                 <span class="error"></span>
             </label>
         </fieldset>
@@ -69,13 +69,11 @@
                 <input type="radio" name="choice" value="forgot"/>
                 Forgot Password
             </label>
-
             <label id="forgot_name">
             <span>User Name</span>
                 <input  type="text" />
                 <span class="error"></span>
             </label>
-
             <label id="forgot_email">
                 <span>Email</span>
                 <input  type="email" />

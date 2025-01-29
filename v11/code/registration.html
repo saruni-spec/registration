@@ -10,31 +10,35 @@
         //
         //After the page loads,create an instance of the auth class and show 
         document.addEventListener("DOMContentLoaded", () => {
+            
              //
              //Create an instance of the auth class
              const iauth=new auth();
              //
-             //Allow the iauth variable to be accessed outside this script
-             window.iauth=iauth;
+             //Initialize it
+             iauth.init();
+            
         });
         
     </script>
 </head>
 <body>
-    <form id="auth"  oninput="iauth.clear_errors()">
+    <form >
         <fieldset id="login">
             <label class="radio">
                 <input type="radio" name="choice" value="login"/>
                 Login
             </label>
-            <label id="login_name">
+            <label>
                 <span>User Name</span>
                 <input type="text" />
+                
                 <span class="error"></span>
             </label>
-            <label id="login_password">
+            <label>
                 <span>Password</span>
-                <input  type="password" />
+                <input type="password" />
+                
                 <span class="error"></span>
             </label>
         </fieldset>
@@ -43,24 +47,28 @@
                 <input type="radio" name="choice" value="sign_up"/>
                 Sign up
             </label>
-            <label id="sign_up_name">
-                <span>User Name</span>
-                <input  type="text"/>
+            <label>
+                <span>Email</span>
+                <input type="email"/>
+                
                 <span class="error"></span>
             </label>
-             <label id="sign_up_email">
-                <span>Email</span>
-                <input  type="email"/>
-                <span  class="error"></span>
+            <label>
+                <span>Username</span>
+                <input type="text"/>
+                
+                <span class="error"></span>
             </label>
-            <label  id="sign_up_password">
+            <label>
                 <span>Password</span>
                 <input type="password" />
+                
                 <span class="error"></span>
             </label>
-            <label id="sign_up_confirm">
+            <label>
                 <span>Confirm Password</span>
-                <input  type="password" />
+                <input type="password" />
+                
                 <span class="error"></span>
             </label>
         </fieldset>
@@ -69,16 +77,16 @@
                 <input type="radio" name="choice" value="forgot"/>
                 Forgot Password
             </label>
-
-            <label id="forgot_name">
-            <span>User Name</span>
-                <input  type="text" />
+            <label>
+            <span>Username</span>
+                <input type="text" />
+                
                 <span class="error"></span>
             </label>
-
-            <label id="forgot_email">
+            <label>
                 <span>Email</span>
-                <input  type="email" />
+                <input type="email" />
+                
                 <span class="error"></span>
             </label>
         </fieldset>
@@ -87,30 +95,32 @@
                 <input type="radio" name="choice" value="change"/>
                 Change Password
             </label>
-            <label id="change_name">
-            <span>User Name</span>
-                <input  type="text" />
+            <label>
+            <span>Username</span>
+                <input type="text" />
+                
                 <span class="error"></span>
             </label>
-            <label id="change_old_password">
+            <label>
                 <span>Old Password</span>
-                <input  type="password" />
+                <input type="password" />
+                
                 <span class="error"></span>
             </label>
-            <label  id="change_new_password">
+            <label>
                 <span>New Password</span>
                 <input type="password" />
+                
                 <span class="error"></span>
             </label>
-            <label id="change_confirm_password">
-                <span>Confirm Password</span>
+            <label>
+                <span>Confirm New Password</span>
                 <input type="password" />
+                
                 <span class="error"></span>
             </label>
         </fieldset>
-        <button type="submit" 
-            onclick="iauth.submit(event)">Submit
-            </button>
+        <button type="submit">Submit</button>
     </form>
 </body>
 </html>

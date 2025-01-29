@@ -1,374 +1,384 @@
-import { layout } from "../../../schema/v/code/questionnaire.js";
-import { view } from "../../../schema/v/code/schema.js";
-import { exec } from "../../../schema/v/code/server.js";
+import { mutall_error, view, options } from "../../../schema/v/code/schema.js";
+import { input, input_type, io, io_option } from "../../../schema/v/code/io.js";
+import { page } from "../../../outlook/v/code/outlook.js";
+import { user } from "../../../outlook/v/code/app.js";
 //
-// Custom authentication (login, sign_up, and forgot password) for mutall
-export class auth extends view {
+// The authoriser class is a page that is used to authorise a user to allow them access to
+// mutall applications.
+////It allows the user to login, register, or reset their password.
+//
+export class authoriser extends page {
+  public sections: Map<"login" | "sign_up" | "forgot" | "change", section>;
   //
-  //Create te constrctor of the class,adding the constructor of its parent class
-  constructor() {
-    super();
+  // the login section
+  public login: login;
+  public forgot: forgot;
+  public change: change;
+  public sign_up: sign_up;
+  //
+  //
+  constructor(parent?: view) {
+    const url: string = "./registration.html";
+    super(url, parent);
+    //
+    // Create the login section
+    this.login = new login(this);
+    this.forgot = new forgot(this);
+    this.change = new change(this);
+    this.sign_up = new sign_up(this);
+    //
+    // Create the sections
+    this.sections = new Map([
+      ["login", this.login],
+      ["forgot", this.forgot],
+      ["change", this.change],
+      ["sign_up", this.sign_up],
+    ]);
+    //
+    // Get the button for submitting the event
+    const submit: HTMLElement = this.get_element("submit");
+    //
+    // Add the event listener for submit
+    submit.onclick = (evt: Event) => this.authorise(evt);
   }
   //
-  // Initialize event listeners
-  public init(): void {
+  // When the form data is submitted on the page
+  authorise(event: Event): void {
     //
-    //Get the registration form on the page
-    const form = document.querySelector("form") as HTMLFormElement;
-    //
-    //Add a submit event to the form
-    form.addEventListener("submit", (e) => this.submit(e, form));
-    this.#clear_errors_on_input(form);
-  }
-  //
-  // Collect inputs on form submission
-  submit(event: Event, form: HTMLFormElement): void {
+    // Prevent the default form submission
     event.preventDefault();
     //
-    //Get the selected option (sign_up,login,reset_password,change_password)
-    const radio_choice: HTMLInputElement | null = form.querySelector(
-      "input[name=choice]:checked"
-    );
-    if (!radio_choice) {
-      alert("Please select an option");
+    // Get the selected section
+    const current: section = this.get_current_section();
+    //
+    // Perform the authorisation based on the selected operation
+    const user: user | undefined = current.authorise();
+    //
+    // If the user is not found, end the function
+    if (!user) {
       return;
     }
     //
-    //Get the choice from the selected option
-    const choice = radio_choice.value as choice;
-    //
-    //Get the fielset with the same name as the choice made
-    const field_set = document.getElementById(choice) as HTMLElement;
-    //
-    //validate that all required fields have inputs
-    if (!this.#validate_required_fields(field_set)) return;
-    //
-    //Get te name of the user,required in all options
-    const name = field_set.querySelector(
-      "input[type=text]"
-    ) as HTMLInputElement;
-    //
-    //Add the choice and name to the credentials
-    const credentials: credentials = {
-      operation: choice,
-      name: name.value,
-    };
-    //
-    //USe a switch to collect the required fields for each option
-    switch (choice) {
-      case "login": {
-        //
-        //get the password for login
-        const passwordInput = field_set.querySelector(
-          "input[type=password]"
-        ) as HTMLInputElement;
-        //
-        //Add the password to the credentials
-        credentials.password = passwordInput.value;
-        //
-        //Authenticate the user for login or not
-        this.#authenticate_user(credentials);
-        break;
-      }
-      case "sign_up": {
-        //
-        //Get the email,password and password confirmation for sign up
-        const email = field_set.querySelector(
-          "input[type=email]"
-        ) as HTMLInputElement;
-        //
-        //Get the password fields,password and confirm password
-        const passwords = field_set.querySelectorAll(
-          "input[type=password]"
-        ) as NodeListOf<HTMLInputElement>;
-        //
-        //Ceck if the password match
-        if (passwords[0].value !== passwords[1].value) {
-          const errorSpan = passwords[1]
-            .closest("label")
-            ?.querySelector(".error") as HTMLSpanElement;
-          errorSpan.textContent = "Passwords do not match";
-          return;
-        }
-        //
-        //Add the email and password to the credentials
-        credentials.email = email.value;
-        credentials.password = passwords[0].value;
-        //
-        //Register the new user
-        this.#register_user(credentials);
-        break;
-      }
-      case "forgot": {
-        //
-        //Get the inputs for resetting a users password when the forget theirs
-        //
-        //Get the email
-        const email = field_set.querySelector(
-          "input[type=email]"
-        ) as HTMLInputElement;
-        //
-        //Add the email to the credentials
-        credentials.email = email.value;
-        //
-        //Reset the users password
-        this.#reset_password(choice, credentials.name);
-        break;
-      }
-      case "change": {
-        //Get the password fields,old password,new password andconfirm password
-        const passwords = field_set.querySelectorAll(
-          "input[type=password]"
-        ) as NodeListOf<HTMLInputElement>;
-        //
-        //Ceck if the new passwords match
-        if (passwords[1].value !== passwords[2].value) {
-          const errorSpan = passwords[2]
-            .closest("label")
-            ?.querySelector(".error") as HTMLSpanElement;
-          errorSpan.textContent = "Passwords do not match";
-          return;
-        }
-
-        //
-        //Reset the users password to the new password
-        this.#reset_password(choice, credentials.name, passwords[1].value);
-      }
-      default:
-        alert("Please choose an operation");
-    }
+    // store the user in the session storage
   }
   //
-  // Ceck if all required fields have an input
-  #validate_required_fields(fieldset: HTMLElement): boolean {
+  //Get the operation id from the selected radio button on the form
+  get_current_section(): section {
     //
-    //Get all the inputs in the fieldset
-    const inputs = fieldset.querySelectorAll(
-      'input:not([type="radio"])'
-    ) as NodeListOf<HTMLInputElement>;
+    // Get the selected operation
+    const operation = this.get_operation();
     //
-    //set a checker to true assuming the input is provided
-    let is_valid = true;
+    // Find the section that corresponds to the selected operation
+    const section = this.sections.get(
+      <"login" | "sign_up" | "forgot" | "change">operation
+    );
     //
-    //Iterate throug each input to check if a input has been proveided
+    // If the section is not found, throw an error
+    if (!section) {
+      throw new mutall_error("Section not found");
+    }
+    //
+    return section;
+  }
+  //
+  //get the operation selected by the user
+  get_operation(): "login" | "sign_up" | "forgot" | "change" {
+    //
+    // Find the selected radio button for the authentication operation
+    const radio_choice = <HTMLInputElement>(
+      this.query_selector("input[name='choice']:checked")
+    );
+    //
+    // Get the selected operation (login, sign_up, forgot, change)
+    const choice: string = radio_choice.value;
+    //
+    //check if choice is a valid operation
+    //
+    const valid_operations = ["login", "sign_up", "forgot", "change"];
+    //
+    if (!valid_operations.includes(choice))
+      throw new mutall_error(
+        `Operation:'${choice}' not valid,valid operations are "login", "sign_up", "forgot", "change"`
+      );
+
+    return <"login" | "sign_up" | "forgot" | "change">choice;
+  }
+}
+//
+// Base abstract class for all sections of the authoriser page
+// A section is the area/part that we collect/create and process user inputs from
+export abstract class section extends view {
+  //
+  // An array of ios that are the inputs of the section
+  public ios: Map<string, io>;
+  //
+  //
+  public inputs?: Map<string, Element>;
+  //
+  // The id of the section element
+  abstract section_id: "login" | "sign_up" | "forgot" | "change";
+  //
+  // This is the element that contains the inputs of the section
+  public section_element: HTMLElement;
+
+  constructor(parent?: view | undefined, options?: options | undefined) {
+    super(parent, options);
+    //
+    // Get the section element
+    this.section_element = this.get_section();
+    //
+    // Create the inputs
+    this.ios = this.create_inputs();
+  }
+  //
+  // Check if the inputs are valid
+  abstract check_inputs(ios: Map<string, io>): boolean;
+  //
+  // Verify the inputs in the database
+  abstract verify(ios: Map<string, io>): user | undefined;
+  //
+  // Collect the inputs
+  create_inputs(): Map<string, io> {
+    //
+    // Create a map to store the input elements
+    const input_map = new Map<string, io>();
+    //
+    // Get all the inputs in the section
+    const inputs: NodeListOf<Element> =
+      this.section_element.querySelectorAll("input");
+    //
+    // If the inputs are not found, throw an error
+    if (inputs.length === 0) {
+      throw new mutall_error("Inputs not found");
+    }
+    //
+    // Loop through the inputs and store them in the map
     inputs.forEach((input) => {
       //
-      //set the error of this input to empty
-      const errorSpan = input
-        .closest("label")
-        ?.querySelector(".error") as HTMLSpanElement;
-      errorSpan.textContent = "";
+      // Get the name of the input
+      const name: string | null = input.getAttribute("name");
       //
-      //if the value of the input is an empty string set the checker to false
-      if (input.value.trim() === "") {
-        errorSpan.textContent = "This field is required";
-        is_valid = false;
+      // If the name is not found, throw an error
+      if (!name) {
+        throw new mutall_error("Input 'name' attribute not found");
       }
+      //
+      this.inputs?.set(name, input);
+      //
+      // Create an input io for the input
+      const io = this.get_io(name);
+      //
+      // Store the input in the map
+      input_map.set(name, io);
     });
     //
-    //return the checker
-    return is_valid;
-  }
-
-  // Clear all errors on the form when an input is made
-  #clear_errors_on_input(form: HTMLFormElement): void {
-    //
-    //add an event listener to the form for inputs
-    form.addEventListener("input", () => {
-      //
-      //Get all the error elements
-      const errorSpans = form.querySelectorAll(
-        ".error"
-      ) as NodeListOf<HTMLSpanElement>;
-      //
-      //Clear any error messages on the error elements
-      errorSpans.forEach((span) => (span.textContent = ""));
-    });
+    // Return the map
+    return input_map;
   }
   //
-  //Use the exec function to verify is the users input password is correct
-  async #password_verify(
-    submited_password: string,
-    db_password: string
-  ): Promise<boolean> {
+  //
+  // Get the section element
+  get_section(): HTMLElement {
     //
-    //Await the password verification and return a boolean
-    return await exec("mutall", [], "password_verify", [
-      submited_password,
-      db_password,
-    ]);
+    // Find the login section
+    const section = this.query_selector(this.section_id);
+    //
+    // If the section is not found, throw an error
+    if (!section) {
+      throw new mutall_error("Section not found");
+    }
+    //
+    // Return the section
+    return section;
   }
   //
-  //Hash the new password
-  async #password_hash(password: string): Promise<string> {
+  // Authenticate the user inputs by checking if they are valid
+  // and if they are in the database
+  authorise(): user | undefined {
     //
-    // Await  a hashed password
-    return await exec("mutall", [], "password_hash", [password]);
+    // Check the inputs for the section
+    const inputs_vaild: boolean = this.check_inputs(this.ios);
+    //
+    //
+    if (!inputs_vaild) {
+      return;
+    }
+    //
+    // Verify the inputs in the database
+    const user: user | undefined = this.verify(this.ios);
+    //
+    return user;
   }
+  //
+  // Create an input io for the section
+  get_io(name: string): input {
+    //
+    // Get the input element
+    const proxy: HTMLElement = this.get_proxy(name);
+    //
+    // Get the input type
+    const type: input_type = { type: "text" };
+    //
+    //
+    const parent: view = this;
+    //
+    //
+    const options: Partial<io_option> = {};
+    //
+    // Create the input object
+    return new input(proxy, type, parent, options);
+  }
+  //
+  // Get the proxy element of the input which is its label
+  get_proxy(name: string): HTMLElement {
+    //
+    // Get the input
+    const input = this.inputs?.get(name);
+    //
+    // If the input is not found, throw an error
+    if (!input) {
+      throw new mutall_error("Input not found");
+    }
+    //
+    // Get the label
+    const label: HTMLElement | null = input.parentElement;
+    //
+    // If the label is not found, throw an error
+    if (!label) {
+      throw new mutall_error("Label not found");
+    }
+    //
+    // Return the label
+    return label;
+  }
+  async check_user(name: string): Promise<
+    | {
+        user: number;
+        name: string;
+        password: string;
+        email: string;
+      }
+    | undefined
+  > {
+    //
+    //query to get their name,password and email
+    const sql = `SELECT user.user,user.name, user.password, user.email FROM user WHERE name = '${name}'`;
+    //
+    //Execute the query
+    const user: Array<{
+      user: number;
+      name: string;
+      password: string;
+      email: string;
+    }> = await this.exec_php(
+      "database",
+      ["mutall_users", false],
+      "get_sql_data",
+      [sql]
+    );
+    //
+    //return a user or null if they dont exist
+    return user ? user[0] : undefined;
+  }
+}
 
-  // Authenticate user for login
-  async #authenticate_user(credentials: credentials): Promise<void> {
+// Login section implementation
+class login extends section {
+  //
+  // The name of the section
+  section_id= "login";
+  //
+  //
+  check_inputs(ios: Map<string, io>): boolean {
+    //
+    // Check if name input is valid.ie not empty
+    const name_io: io | undefined = ios.get("name");
+    //
+    if (!name_io) {
+      throw new mutall_error("Name input not found");
+    }
+    //
+    // If the name input is empty, report the error
+    if (name_io.value?.toString().trim() === "") {
+      name_io.report_error("Name is required");
+      return false;
+    }
+    //
+    // Check if password input is valid.ie not empty
+    const password_io: io | undefined = ios.get("password");
+    //
+    if (!password_io) {
+      throw new mutall_error("Password input not found");
+    }
+    //
+    // If the password input is empty, report the error
+    if (password_io.value?.toString().trim() === "") {
+      password_io.report_error("Password is required");
+      return false;
+    }
+    //
+    // Check if password input is valid.ie not empty
+    return true;
+  }
+  //
+  // Log in an existing user by verifying credentials
+  async verify(ios:Map<string,io>): Promise<user | undefined> {
     //
     //Check if a user with the current name exists
-    const user = await this.#check_user(credentials.name);
-    if (!user) {
-      alert("User does not exist");
+    const current_user = await this.check_user(ios.get("name")?.value);
+    //
+    //If the user does not exist,show an error message
+    if (!current_user) {
+      //
+      ios.get("name")?.report_error("Username does not match password");
+      //
+      ios.get("password")?.report_error(
+        "Password does not match username"
+      );
       return;
     }
     //
     //Verify the current users password
-    if (await this.#password_verify(credentials.password!, user.password)) {
-      //
-      //Create a session for the existing user
-      await this.#create_session(user);
-      alert("Login successful");
-    } else {
-      alert("Credentials do not match");
-    }
-  }
-  //
-  // Register a new user
-  async #register_user(credentials: credentials): Promise<void> {
-    //
-    //Check if a user with the same name exists
-    const user = await this.#check_user(credentials.name);
-    if (user) {
-      alert("User already exists");
-      return;
-    }
-    //
-    //Hash the new users password before storing it
-    const hashed_password = await this.#password_hash(credentials.password!);
-    //
-    //Create a layout with the new users information
-    const layout: Array<layout> = [
-      [hashed_password, "user", "password"],
-      [credentials.name, "user", "name"],
-      [credentials.email!, "user", "email"],
-    ];
-    //
-    //Save the new user to the database suing the exec method
-    const response = await super.exec_php(
-      "questionnaire",
-      ["mutall_users"],
-      "load_common",
-      [layout]
+    const isPasswordVerified: boolean = await this.exec_php(
+      "mutall",
+      [],
+      "password_verify",
+      [ios.get("password")?.value, current_user.password]
     );
     //
-    //Return a response to the user
-    if (response === "ok") {
-      alert("Registration successful");
-    } else {
-      alert("Registration failed");
-    }
-  }
-  //
-  // reset a users password whe they forget their password to the shared password
-  async #reset_password(
-    operation: "forgot" | "change",
-    name: string,
-    new_password?: string
-  ): Promise<void> {
-    //
-    //Check if the user exists
-    const user = await this.#check_user(name);
-    if (user) {
-      if (operation === "change") {
-        //
-        //Set their password to their new password
-        await this.#update_password(name, new_password!);
-        alert("Password reset");
-        return;
-      }
+    //If the password does not match the user name, show an error message
+    if (!isPasswordVerified) {
       //
-      //Set their password to a shared password
-      await this.#update_password(name, "shared_password");
-      alert("Password reset to default");
+      //get the error span for the user name
+      ios.get("name")?.report_error(
+        "User name does not match password"
+      );
+      //
+      ios.get("password")?.report_error(
+        "Password does not match user name"
+      );
       return;
     }
-    alert("User not found");
+    //
+    // Construct and return the user object for the current user
+    return new user(current_user.name, current_user.user);
   }
-  //
-  // Check if the user exists
-  async #check_user(
-    name: string
-  ): Promise<{ name: string; password: string; email: string } | null> {
-    //
-    //query to get their name,password and email
-    const sql = `SELECT user.name, user.password, user.email FROM user WHERE name = '${name}'`;
-    //
-    //Execute the query
-    const user: Array<{ name: string; password: string; email: string }> =
-      await super.exec_php(
-        "database",
-        ["mutall_users", false],
-        "get_sql_data",
-        [sql]
-      );
-    //
-    //return a user or null if they dont exist
-    return user ? user[0] : null;
-  }
-  //
-  // Create a session for a logged in user
-  async #create_session(user: { name: string; email: string }): Promise<void> {
-    //
-    //Set the users name and email
-    const session = {
-      name: user.name,
-      email: user.email,
-    };
-    //
-    //Save the user to local strorage
-    localStorage.setItem("session", JSON.stringify(session));
-  }
-  //
-  // Update a users pasword
-  async #update_password(name: string, new_password: string): Promise<void> {
-    //
-    //Hash the password before storing it
-    const hashed_password = await this.#password_hash(new_password);
-    //
-    //Create a layout to save the new password to the database
-    const layout: Array<layout> = [
-      [hashed_password, "user", "password"],
-      [name, "user", "name"],
-    ];
-    //
-    //Save the new password to the db using the exec method
-    await super.exec_php("questionnaire", ["mutall_users"], "load_common", [
-      layout,
-    ]);
-  }
-  //
-  //Logout the current user by destroying their session
-  public async logout(): Promise<void> {
-    //
-    //Remove the session from local storage
-    localStorage.removeItem("session");
-    //
-    //Redirect to login page
-    window.location.href = "login page";
-  }
-  //
-  //Check if a user is currently logged in
-  public current_user(): { name: string; email: string } | null {
-    //
-    //Get the session from local storage
-    const session = localStorage.getItem("session");
-    //
-    //return the session or null
-    return session ? JSON.parse(session) : null;
-  }
+ 
+  
 }
-//
-//Choice types
-type choice = "login" | "sign_up" | "forgot" | "change";
-//
-//Credentials object
-interface credentials {
-  operation: choice;
-  name: string;
-  email?: string;
-  password?: string;
+
+class change extends section {
+  section_id: operation = "change";
+
+ 
+}
+class forgot extends section {
+  section_id: operation = "forgot";
+
+  
+}
+class sign_up extends section {
+  section_id: operation = "sign_up";
+
+ 
 }
