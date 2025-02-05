@@ -21,12 +21,15 @@
     </script>
 </head>
 <body>
-    <form id="auth"  oninput="iauth.clear_errors()">
+    <form id="auth">
+       
         <fieldset id="login">
-            <label class="radio">
-                <input type="radio" name="choice" value="login"/>
-                Login
-            </label>
+            <legend>
+                <label class="radio">
+                    <input type="radio" name="choice" value="login"/>
+                    Login
+                </label>
+            </legend>
 
             <label data-io_type="input">
                 <span>User Name</span>
@@ -41,75 +44,81 @@
             </label>
         </fieldset>
         <fieldset id="sign_up">
-            <label class="radio">
-                <input type="radio" name="choice" value="sign_up"/>
-                Sign up
-            </label>
-            <label id="sign_up_name">
+            <legend>
+                <label class="radio">
+                    <input type="radio" name="choice" value="sign_up"/>
+                    Sign up
+                </label>
+            </legend>
+            <label data-io_type="input">
                 <span>User Name</span>
-                <input  type="text"/>
+                <input name="name" type="text"/>
                 <span class="error"></span>
             </label>
-             <label id="sign_up_email">
+             <label data-io_type="input">
                 <span>Email</span>
-                <input  type="email"/>
+                <input name="email" type="email"/>
                 <span  class="error"></span>
             </label>
-            <label  id="sign_up_password">
+            <label data-io_type="input">
                 <span>Password</span>
-                <input type="password" />
+                <input name="password" type="password" />
                 <span class="error"></span>
             </label>
-            <label id="sign_up_confirm">
+            <label data-io_type="input">
                 <span>Confirm Password</span>
-                <input  type="password" />
+                <input name="Confirm_password" type="password" />
                 <span class="error"></span>
             </label>
         </fieldset>
         <fieldset id="forgot">
-            <label class="radio">
-                <input type="radio" name="choice" value="forgot"/>
-                Forgot Password
-            </label>
-            <label id="forgot_name">
+            <legend>
+                <label class="radio">
+                    <input type="radio" name="choice" value="forgot"/>
+                    Forgot Password
+                </label>
+            </legend>
+            <label data-io_type="input">
             <span>User Name</span>
-                <input  type="text" />
+                <input name="name" type="text" />
                 <span class="error"></span>
             </label>
-            <label id="forgot_email">
+            <label data-io_type="input">
                 <span>Email</span>
-                <input  type="email" />
+                <input name="email" type="email" />
                 <span class="error"></span>
             </label>
         </fieldset>
         <fieldset id="change">
-            <label class="radio">
-                <input type="radio" name="choice" value="change"/>
-                Change Password
-            </label>
-            <label id="change_name">
+            <legend>
+                <label class="radio">
+                    <input type="radio" name="choice" value="change"/>
+                    Change Password
+                </label>
+            </legend>
+            <label data-io_type="input">
             <span>User Name</span>
-                <input  type="text" />
+                <input name="name" type="text" />
                 <span class="error"></span>
             </label>
-            <label id="change_old_password">
+            <label data-io_type="input">
                 <span>Old Password</span>
-                <input  type="password" />
+                <input name="password" type="password" />
                 <span class="error"></span>
             </label>
-            <label  id="change_new_password">
+            <label data-io_type="input">
                 <span>New Password</span>
-                <input type="password" />
+                <input name="password" type="password" />
                 <span class="error"></span>
             </label>
-            <label id="change_confirm_password">
+            <label data-io_type="input">
                 <span>Confirm Password</span>
-                <input type="password" />
+                <input name="Confirm_password" type="password" />
                 <span class="error"></span>
             </label>
         </fieldset>
         <button type="submit" id="submit"
-            onclick="iauth.submit(event)">Submit
+            onclick="iauth.authorise(event)">Submit
             </button>
     </form>
 </body>
