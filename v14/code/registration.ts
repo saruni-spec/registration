@@ -1,4 +1,3 @@
-//Support for user registraction
 import {
   mutall_error,
   view,
@@ -6,16 +5,16 @@ import {
   basic_value,
 } from "../../../schema/v/code/schema.js";
 import { myalert } from "../../../schema/v/code/mutall.js";
+import { input, input_type, io, io_option } from "../../../schema/v/code/io.js";
 import { page } from "../../../outlook/v/code/outlook.js";
 import { user } from "../../../outlook/v/code/app.js";
+import { exec } from "../../../schema/v/code/server.js";
 import { layout } from "../../../schema/v/code/questionnaire.js";
-import { input, input_type, io, io_option } from "../../../schema/v/code/io.js";
 //
-// The section id is the id of the fieldset section, i.e. the registraction operations
+// The section id is the id of the fieldset section,ie the operations
 export type section_id = "login" | "forgot" | "change" | "sign_up";
 //
-//The user interace, as opposed to a user object. Needed to support reading of
-// user data from a datanase
+//The user interace, as opposed to a user object. Needed to support ......
 export type user_interface = {
   user: number;
   name: string;
@@ -103,7 +102,7 @@ export class authoriser extends page {
   }
 
   //
-  // When the form data is submitted on the page do the authorisation
+  // When the form data is submitted on the page
   async authorise(event: Event): Promise<void> {
     //
     // Prevent the default form submission
@@ -174,20 +173,19 @@ export abstract class section extends view {
     this.name = this.ios.get("name");
   }
 
-  //Check inputs and return true if all the inputs are ok
+  //Check inputs and return true of all the inputs are ok
   async check_inputs(): Promise<boolean> {
     //
     //Assume all the inputs are ok
     let ok: boolean = true;
     //
-    //Loop thru all the ios and verify each one of them is ok. If any of them is
-    //not ok, then set ok to false
+    //Loop thru all the ios and verify each one of them is ok
     for (const io of this.ios.values()) {
       //
       //For future use, package the following check as a method of io
       //
       //Tell us if the io is required or not. If not, skip the rest of the test
-      //Ensure that requred is one of the io_options and read its status from
+      //Ensure that requred is one of the io_options and read its sttais from
       //the current HTML for every input
       if (!io.search_option("required")) continue;
       //
@@ -219,15 +217,13 @@ export abstract class section extends view {
     return ok;
   }
   //
-  //Return the authorised user, or undefined if authorisation fails;
+  //Retirn undefined if authorisation fails;
   async authorise(): Promise<user | undefined> {
     //
-    //Discontinue the  authorisation if the inputs have errors. The reporting
-    //is done as close to teh error source as possible
+    //Discontinue the  authorisation if the inputs have errors
     if (!this.check_inputs()) return;
     //
-    //Use teh username to fetch user details from the regostragion database
-    // -- mutall_user;
+    //Get the user interface;
     const user: user_interface | undefined = await this.get_user(
       this.name.value
     );
@@ -245,7 +241,7 @@ export abstract class section extends view {
     //If the user does not exist, report and discontinue
     if (user) return true;
     //
-    //The user does not exist. Report and return false
+    //The user does not exost. Report and return false
     this.name.error.textContent = "User does not exist";
     return false;
   }
@@ -256,31 +252,22 @@ export abstract class section extends view {
   ): Promise<user | undefined>;
 
   //
-  // Collect the input ios
+  // Collect the inputs
   create_ios(): mymap<string, input> {
     //
-    // Create a map to store the ios
+    // Create a map to store the input elements
     const input_map = new mymap<string, input>("ios", []);
     //
-    //
-    //
     // Get all the inputs in the section
-    // use data-io_type attribute;
-    const labels: NodeListOf<Element> = this.fieldset.querySelectorAll(
-      "label[data-io_type]"
-    );
+    const inputs: NodeListOf<Element> = this.fieldset.querySelectorAll("input");
     //
     // If the inputs are not found, throw an error
-    if (labels.length === 0) {
-      throw new mutall_error("Inputs with `data-io_type` not found");
+    if (inputs.length === 0) {
+      throw new mutall_error("Inputs not found");
     }
     //
     // Loop through the inputs and store them in the map
-    labels.forEach((label) => {
-      const input: HTMLInputElement | null = label.querySelector("input");
-      //
-      //
-      if (!input) throw new mutall_error("Input not found");
+    inputs.forEach((input) => {
       //
       // Get the name of the input
       const name: string | null = input.getAttribute("name");
@@ -310,7 +297,7 @@ export abstract class section extends view {
     //
     const parent: view = this;
     //
-    const options: io_option = {};
+    const options: Partial<io_option> = {};
     //
     // Create the input object
     return new input(proxy, type, parent, options);
@@ -458,7 +445,7 @@ export class change extends section {
     // update the password
     //
     //Hash the password before storing it
-    const hashed_password = await this.exec_php("mutall", [], "password_hash", [
+    const hashed_password = await exec("mutall", [], "password_hash", [
       this.new_password.value,
     ]);
     //
@@ -493,27 +480,24 @@ export class forgot extends section {
     // Generate a new password
     const password: string = await this.generate_new_password(curr_user);
     //
-    // Send the new password to the user's email
-    const result: "ok" | Error = await this.email_password(password, curr_user);
-    //
-    //Kill teh system if the emial was nt sent
-    if (result !== "ok") throw new mutall_error(result.message);
+    // send the new password to the user's email
+    this.email_password(password, curr_user);
     //
     //Alert the user that the password is in the mail.
-    myalert("See your new password in your email");
+    myalert("See your new passwors in your email ");
     //
     //return withou a user
     return undefined;
   }
   //
-  // Generate a simple new password for the user, hash t and  save it to the databaenase
+  // Generate a simple new password for the user
   async generate_new_password(curr_user: user_interface): Promise<string> {
     //
     // Generate a new password
-    const password = this.construct_password();
+    const password = this.generate_password();
     //
     //Hash the password before storing it
-    const hashed_password = await this.exec_php("mutall", [], "password_hash", [
+    const hashed_password = await exec("mutall", [], "password_hash", [
       password,
     ]);
     //
@@ -524,28 +508,18 @@ export class forgot extends section {
     ];
     //
     //Save the new password to the db using the exec method
-    const result: "ok" | string = await this.exec_php(
-      "questionnaire",
-      ["mutall_users"],
-      "load_common",
-      [layout]
-    );
+    exec("questionnaire", ["mutall_users"], "load_common", [layout]);
     //
-    //Error occured when saving; kill this proces, so the error can be investigated
-    if (!result) throw new mutall_error(result);
-    //
-    //Return the new password
+    //return the new password
     return password;
   }
   //
-  //Construct a password
-  construct_password(length: number = 12): string {
+  generate_password(length = 12) {
     //
     // Define the characters that we will use to generate the password
     const chars =
       "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()_-+=<>?";
     //
-    //Start with an empty password
     let password = "";
     //
     // Generate the password by selecting a random character from the chars
@@ -557,36 +531,16 @@ export class forgot extends section {
       // Append the random character to the password
       password += chars[randomIndex];
     }
-    //
-    //Return the paswword
     return password;
   }
   //
   // Send the new password to the user's email
-  async email_password(
-    password: string,
-    curr_user: user_interface
-  ): Promise<"ok" | Error> {
-    //
-    //Compile the message
-    const message: string = `Your new password is ${password}`;
+  async email_password(password: string, curr_user: user_interface) {
     //
     // Get the email of the user
     const email = curr_user.email;
     //
-    const name = curr_user.name;
-    //
-    // Send the email?????????
-    //The .d.ts is dirty and incomplete!
-    //
-    const result: "ok" | string = await this.exec_php(
-      "mutall_mailer",
-      [],
-      "send_email",
-      [email, "Mutall Password Recovery", message, name]
-    );
-    //
-    return result === "ok" ? "ok" : new Error(result);
+    // Send the email
   }
 }
 
@@ -637,7 +591,7 @@ export class sign_up extends section {
   async authenticate(curr_user: user_interface): Promise<user | undefined> {
     //
     //Hash the password before storing it
-    const hashed_password = await this.exec_php("mutall", [], "password_hash", [
+    const hashed_password = await exec("mutall", [], "password_hash", [
       this.password.value,
     ]);
     //

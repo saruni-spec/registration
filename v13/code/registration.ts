@@ -1,33 +1,23 @@
-//Support for user registraction
 import {
   mutall_error,
   view,
   mymap,
   basic_value,
 } from "../../../schema/v/code/schema.js";
-import { myalert } from "../../../schema/v/code/mutall.js";
+import { input, input_type, io, io_option } from "../../../schema/v/code/io.js";
 import { page } from "../../../outlook/v/code/outlook.js";
 import { user } from "../../../outlook/v/code/app.js";
+import { exec } from "../../../schema/v/code/server.js";
 import { layout } from "../../../schema/v/code/questionnaire.js";
-import { input, input_type, io, io_option } from "../../../schema/v/code/io.js";
 //
-// The section id is the id of the fieldset section, i.e. the registraction operations
+// The section id is the id of the fieldset section,ie the operations
 export type section_id = "login" | "forgot" | "change" | "sign_up";
-//
-//The user interace, as opposed to a user object. Needed to support reading of
-// user data from a datanase
-export type user_interface = {
-  user: number;
-  name: string;
-  password: string;
-  email: string;
-};
 //
 // The authoriser class is a page that is used to authorise a user to allow them access to
 // mutall applications.
 // It allows the user to login, register, or reset their password.
+//
 export class authoriser extends page {
-  //
   //Key for saving a user to the local storage
   static user_key: string = "last_logged_in_user";
   //
@@ -103,7 +93,7 @@ export class authoriser extends page {
   }
 
   //
-  // When the form data is submitted on the page do the authorisation
+  // When the form data is submitted on the page
   async authorise(event: Event): Promise<void> {
     //
     // Prevent the default form submission
@@ -149,7 +139,7 @@ export abstract class section extends view {
   public get is_current(): boolean {
     //
     //Get the input element named choice
-    const input: HTMLInputElement | null = this.fieldset.querySelector(
+    const input: HTMLInputElement | null = this.document.querySelector(
       'input[name="choice"]'
     );
     //
@@ -160,9 +150,10 @@ export abstract class section extends view {
     //The checked satatus of the element determines the result
     return input.checked;
   }
-
-  //The name io is in all the sections
-  public name: io;
+  //
+  //Number of errors on this section on authorise. The number will be increase as
+  // more and more errors are reported
+  public errors: number = 0;
 
   // Fieldset is the html element that contains the inputs of the section
   constructor(public fieldset: Element, parent: view) {
@@ -170,117 +161,28 @@ export abstract class section extends view {
     //
     //Create the ios of this section
     this.ios = this.create_ios();
-    //
-    this.name = this.ios.get("name");
   }
 
-  //Check inputs and return true if all the inputs are ok
-  async check_inputs(): Promise<boolean> {
-    //
-    //Assume all the inputs are ok
-    let ok: boolean = true;
-    //
-    //Loop thru all the ios and verify each one of them is ok. If any of them is
-    //not ok, then set ok to false
-    for (const io of this.ios.values()) {
-      //
-      //For future use, package the following check as a method of io
-      //
-      //Tell us if the io is required or not. If not, skip the rest of the test
-      //Ensure that requred is one of the io_options and read its status from
-      //the current HTML for every input
-      if (!io.search_option("required")) continue;
-      //
-      //The io value is required: check that it is not not null. If it is not null
-      // then discontinue
-      if (io.value) continue;
-      //
-      //A required value is  null. Report the error
-      //
-      //Formuate the error message. Get the label of the io. You must have supplied
-      //it as an option when creating the io
-      const label: string | undefined = io.search_option("label");
-      //
-      //If an io does not have a label, the use the name of the io as the label.
-      //Every io must have a name, read from the HTML input element
-      const name: string | undefined = io.name;
-      //
-      //Formuate the error message. Use the name of the io, if teh label is not
-      //available
-      const msg: string = `${label ?? name} is required`;
-      //
-      //Display the error message at neatest to the io
-      io.error.textContent = msg;
-      //
-      //Flag this error, so that not all inputs are ok
-      ok = false;
-    }
-    //
-    return ok;
-  }
-  //
-  //Return the authorised user, or undefined if authorisation fails;
-  async authorise(): Promise<user | undefined> {
-    //
-    //Discontinue the  authorisation if the inputs have errors. The reporting
-    //is done as close to teh error source as possible
-    if (!this.check_inputs()) return;
-    //
-    //Use teh username to fetch user details from the regostragion database
-    // -- mutall_user;
-    const user: user_interface | undefined = await this.get_user(
-      this.name.value
-    );
-    //
-    //Check the user. Discontinue if invalid
-    if (!this.check_user(user)) return undefined;
-    //
-    //Now do the real authentication
-    return await this.authenticate(user);
-  }
-
-  //The default version. Override this behavior for login
-  check_user(user: user_interface | undefined): boolean {
-    //
-    //If the user does not exist, report and discontinue
-    if (user) return true;
-    //
-    //The user does not exist. Report and return false
-    this.name.error.textContent = "User does not exist";
-    return false;
-  }
-
-  //The process of authentication
-  abstract authenticate(
-    user: user_interface | undefined
-  ): Promise<user | undefined>;
+  //Retirn undefined if authorisation fails;
+  abstract authorise(): Promise<user | undefined>;
 
   //
-  // Collect the input ios
+  // Collect the inputs
   create_ios(): mymap<string, input> {
     //
-    // Create a map to store the ios
+    // Create a map to store the input elements
     const input_map = new mymap<string, input>("ios", []);
     //
-    //
-    //
     // Get all the inputs in the section
-    // use data-io_type attribute;
-    const labels: NodeListOf<Element> = this.fieldset.querySelectorAll(
-      "label[data-io_type]"
-    );
+    const inputs: NodeListOf<Element> = this.fieldset.querySelectorAll("input");
     //
     // If the inputs are not found, throw an error
-    if (labels.length === 0) {
-      throw new mutall_error("Inputs with `data-io_type` not found");
+    if (inputs.length === 0) {
+      throw new mutall_error("Inputs not found");
     }
     //
     // Loop through the inputs and store them in the map
-    labels.forEach((label) => {
-      const input: HTMLInputElement | null = label.querySelector("input");
-      //
-      //
-      if (!input) throw new mutall_error("Input not found");
+    inputs.forEach((input) => {
       //
       // Get the name of the input
       const name: string | null = input.getAttribute("name");
@@ -310,7 +212,7 @@ export abstract class section extends view {
     //
     const parent: view = this;
     //
-    const options: io_option = {};
+    const options: Partial<io_option> = {};
     //
     // Create the input object
     return new input(proxy, type, parent, options);
@@ -335,24 +237,41 @@ export abstract class section extends view {
     return label;
   }
   //
-  // Get the user from the database
-  async get_user(name: basic_value): Promise<user_interface | undefined> {
+  //Reporting errors where they occur
+  report(io: io, msg: string): void {
     //
+    //Get the reporting (span) element
+    const element: HTMLElement = io.error;
+    //
+    //Now do the reporting
+    element.textContent = msg;
+    //
+    //Raise teh error counter
+    this.errors++;
+  }
+  //
+  // Get the user from the database
+  async get_user(name: basic_value): Promise<
+    | {
+        user: number;
+        name: string;
+        password: string;
+        email: string;
+      }
+    | undefined
+  > {
     if (!name) return;
     //
     //query to get their name,password and email
-    const sql = `
-      SELECT 
-        user.user, 
-        user.name, 
-        user.password, 
-        user.email 
-      FROM 
-        user 
-      WHERE name = '${name}'`;
+    const sql = `SELECT user.user,user.name, user.password, user.email FROM user WHERE name = '${name}'`;
     //
     //Execute the query
-    const user: Array<user_interface> = await this.exec_php(
+    const user: Array<{
+      user: number;
+      name: string;
+      password: string;
+      email: string;
+    }> = await this.exec_php(
       "database",
       ["mutall_users", false],
       "get_sql_data",
@@ -367,6 +286,7 @@ export abstract class section extends view {
 // Login section implementation
 export class login extends section {
   //
+  public name: io;
   public password: io;
   //
   constructor(fieldset: Element, parent: view) {
@@ -375,10 +295,26 @@ export class login extends section {
     this.name = this.ios.get("name");
     this.password = this.ios.get("password");
   }
-
   //
   //Authorise the user to login
-  async authenticate(curr_user: user_interface): Promise<user | undefined> {
+  async authorise(): Promise<user | undefined> {
+    //
+    //Check the raw inputs
+    if (!this.name.value) this.report(this.name, "Name is required");
+    if (!this.password.value)
+      this.report(this.password, "Password is required");
+    //
+    //Discontinue if there are errors
+    if (this.errors > 0) return;
+    //
+    //Get the user (pk);
+    const curr_user = await this.get_user(this.name.value);
+    //
+    //If the user does not exist, report so and discontinue
+    if (!curr_user) {
+      this.report(this.name, "User does not exist");
+      return;
+    }
     //
     //The user exist. Match passwords;
     const isPasswordVerified: boolean = await this.exec_php(
@@ -390,7 +326,7 @@ export class login extends section {
     //
     //If the passwords do not match, report so and discontinue
     if (!isPasswordVerified) {
-      this.password.error.textContent = "Password is incorrect";
+      this.report(this.password, "Password is incorrect");
       return;
     }
     //
@@ -410,6 +346,7 @@ export class login extends section {
 export class change extends section {
   //
   // The user name, old password, new password and confirm password required to change the password
+  public name: io;
   public old_password: io;
   public confirm_password: io;
   public new_password: io;
@@ -417,29 +354,43 @@ export class change extends section {
   constructor(fieldset: Element, parent: view) {
     super(fieldset, parent);
     //
+    this.name = this.ios.get("name");
     this.new_password = this.ios.get("new_password");
     this.confirm_password = this.ios.get("confirm_password");
     this.old_password = this.ios.get("old_password");
   }
-
-  async check_inputs(): Promise<boolean> {
+  //
+  //Authorise the user to change their password
+  async authorise(): Promise<user | undefined> {
     //
-    //Do the default io checks
-    if (!(await this.check_inputs())) return false;
+    //Check the inputs
+    if (!this.name.value) this.report(this.name, "Name is required");
+    if (!this.old_password.value)
+      this.report(this.old_password, "Old password is required");
+    if (!this.confirm_password.value)
+      this.report(this.confirm_password, "Confirm password is required");
+    if (!this.new_password.value)
+      this.report(this.new_password, "New password is required");
+
+    //
+    //Discontinue if there are errors
+    if (this.errors > 0) return;
     //
     // check if the new password and the confirm password match
     if (this.new_password.value !== this.confirm_password.value) {
-      this.confirm_password.error.textContent = "Passwords do not match";
-      this.new_password.error.textContent = "Passwords do not match";
-      return false;
+      this.report(this.confirm_password, "Passwords do not match");
+      this.report(this.new_password, "Passwords do not match");
+      return;
     }
     //
-    return true;
-  }
-
-  //
-  //Authorise the user to change their password
-  async authenticate(curr_user: user_interface): Promise<user | undefined> {
+    // check if the user exists
+    const curr_user = await this.get_user(this.name.value);
+    //
+    //If the user does not exist, report and discontinue
+    if (!curr_user) {
+      this.report(this.name, "User does not exist");
+      return;
+    }
     //
     // check if the old password matches the password in the database
     const isPasswordVerified: boolean = await this.exec_php(
@@ -451,14 +402,14 @@ export class change extends section {
     //
     //If the passwords do not match, report so and discontinue
     if (!isPasswordVerified) {
-      this.old_password.error.textContent = "Password is incorrect";
+      this.report(this.old_password, "Password is incorrect");
       return;
     }
     //
     // update the password
     //
     //Hash the password before storing it
-    const hashed_password = await this.exec_php("mutall", [], "password_hash", [
+    const hashed_password = await exec("mutall", [], "password_hash", [
       this.new_password.value,
     ]);
     //
@@ -483,116 +434,37 @@ export class change extends section {
 
 export class forgot extends section {
   //
+  //Only name is required. We use the recoverly email to send you a new password
+  public name: io;
+  //
   constructor(fieldset: Element, parent: view) {
     super(fieldset, parent);
+    //
+    this.name = this.ios.get("name");
   }
   //
   //Authorise the user to recover their password
-  async authenticate(curr_user: user_interface): Promise<user | undefined> {
+  async authorise(): Promise<user | undefined> {
     //
-    // Generate a new password
-    const password: string = await this.generate_new_password(curr_user);
+    // check if the user exists
+    const curr_user = await this.get_user(this.name.value);
     //
-    // Send the new password to the user's email
-    const result: "ok" | Error = await this.email_password(password, curr_user);
-    //
-    //Kill teh system if the emial was nt sent
-    if (result !== "ok") throw new mutall_error(result.message);
-    //
-    //Alert the user that the password is in the mail.
-    myalert("See your new password in your email");
-    //
-    //return withou a user
-    return undefined;
-  }
-  //
-  // Generate a simple new password for the user, hash t and  save it to the databaenase
-  async generate_new_password(curr_user: user_interface): Promise<string> {
-    //
-    // Generate a new password
-    const password = this.construct_password();
-    //
-    //Hash the password before storing it
-    const hashed_password = await this.exec_php("mutall", [], "password_hash", [
-      password,
-    ]);
-    //
-    //Save the new password to the database
-    const layout: Array<layout> = [
-      [hashed_password, "user", "password"],
-      [curr_user.name, "user", "name"],
-    ];
-    //
-    //Save the new password to the db using the exec method
-    const result: "ok" | string = await this.exec_php(
-      "questionnaire",
-      ["mutall_users"],
-      "load_common",
-      [layout]
-    );
-    //
-    //Error occured when saving; kill this proces, so the error can be investigated
-    if (!result) throw new mutall_error(result);
-    //
-    //Return the new password
-    return password;
-  }
-  //
-  //Construct a password
-  construct_password(length: number = 12): string {
-    //
-    // Define the characters that we will use to generate the password
-    const chars =
-      "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()_-+=<>?";
-    //
-    //Start with an empty password
-    let password = "";
-    //
-    // Generate the password by selecting a random character from the chars
-    for (let i = 0; i < length; i++) {
-      //
-      // Generate a random index
-      const randomIndex = Math.floor(Math.random() * chars.length);
-      //
-      // Append the random character to the password
-      password += chars[randomIndex];
+    //If the user does not exist, report and discontinue
+    if (!curr_user) {
+      this.report(this.name, "User does not exist");
+      return;
     }
     //
-    //Return the paswword
-    return password;
-  }
-  //
-  // Send the new password to the user's email
-  async email_password(
-    password: string,
-    curr_user: user_interface
-  ): Promise<"ok" | Error> {
+    // Generate a new password
     //
-    //Compile the message
-    const message: string = `Your new password is ${password}`;
-    //
-    // Get the email of the user
-    const email = curr_user.email;
-    //
-    const name = curr_user.name;
-    //
-    // Send the email?????????
-    //The .d.ts is dirty and incomplete!
-    //
-    const result: "ok" | string = await this.exec_php(
-      "mutall_mailer",
-      [],
-      "send_email",
-      [email, "Mutall Password Recovery", message, name]
-    );
-    //
-    return result === "ok" ? "ok" : new Error(result);
+    // send the new password to the user's email
   }
 }
 
 export class sign_up extends section {
   //
   // The user name, password, confirm password and email required to sign up a new user
+  public name: io;
   public password: io;
   public confirm_password: io;
   //
@@ -602,44 +474,47 @@ export class sign_up extends section {
   constructor(fieldset: Element, parent: view) {
     super(fieldset, parent);
     //
+    this.name = this.ios.get("name");
     this.password = this.ios.get("password");
     this.confirm_password = this.ios.get("confirm_password");
     this.email = this.ios.get("email");
   }
   //
-  async check_inputs(): Promise<boolean> {
+  //Authorise the user to sign up
+  async authorise(): Promise<user | undefined> {
     //
-    //Check the required inpus
-    if (!(await super.check_inputs())) return false;
+    //Check the inputs
+    if (!this.name.value) this.report(this.name, "Name is required");
+    if (!this.password.value)
+      this.report(this.password, "Password is required");
+    if (!this.confirm_password.value)
+      this.report(this.confirm_password, "Confirm password is required");
+    if (!this.email.value) this.report(this.email, "Email is required");
+    //
+    //Discontinue if there are errors
+    if (this.errors > 0) return;
     //
     // check if the new password and the confirm password match
     if (this.password.value !== this.confirm_password.value) {
-      this.confirm_password.error.textContent = "Passwords do not match";
-      this.password.error.textContent = "Passwords do not match";
-      return false;
+      this.report(this.confirm_password, "Passwords do not match");
+      this.report(this.password, "Passwords do not match");
+      return;
     }
-    return true;
-  }
-
-  //The default version. Override this behavior for login
-  check_user(user: user_interface | undefined): boolean {
     //
-    //If the user does not exist, thats ok; discontinueteh check
-    if (!user) return true;
+    //Check if the user exists
+    const curr_user = await this.get_user(this.name.value);
     //
-    //The user already exist
-    this.name.error.textContent = "User is already registered";
-    return false;
-  }
-
-  //
-  //Authorise the user to sign up
-  async authenticate(curr_user: user_interface): Promise<user | undefined> {
+    //If the user exists, report and discontinue
+    if (curr_user) {
+      this.report(this.name, "User already exists");
+      return;
+    }
     //
     //Hash the password before storing it
-    const hashed_password = await this.exec_php("mutall", [], "password_hash", [
+    const hashed_password = await exec("mutall", [], "password_hash", [
       this.password.value,
     ]);
+    //
     //
     //Create a layout with the new users information
     const layout: Array<layout> = [
@@ -658,7 +533,7 @@ export class sign_up extends section {
     //
     // if the response is not successful, report so
     if (response !== "ok") {
-      this.name.error.textContent = "User not saved";
+      this.report(this.name, "User not saved");
       return;
     }
     //
@@ -669,7 +544,7 @@ export class sign_up extends section {
     //
     //If the user does not exist, report and discontinue
     if (!new_user) {
-      this.name.error.textContent = "User registration failed";
+      this.report(this.name, "User registration failed");
       return;
     }
     //

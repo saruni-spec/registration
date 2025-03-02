@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <script type="module">
+        import { exec } from "../../../schema/v/code/server.js";
+        //
+        // Send an email to the user
+        async function send_mail(e) {
+            //
+            // Set the message and subject for the email
+            const subject = "Password Recovery";
+            const message = "Your new password is: 1234";
+            //
+            // Get the email and name of the user
+            const email = document.getElementById("email").value;
+            const name = document.getElementById("user_name").value;
+            //
+            // Use the mutall_mailer to send the email
+            const result=await exec(
+                //
+                // Name of the class
+                "mutall_mailer",
+                [],
+                //
+                // Name of the method to send the email
+                "send_email",
+                //
+                // Parameters to the method,(email, subject, message, name)
+                [email, "Mutall Password Recovery", message,name]
+            );
+            //
+            // Check if the email was sent successfully
+            if (result === "ok"){
+                //
+                //
+                alert("New password sent to your email");
+                return;
+            }
+            //
+            // If the email was not sent successfully
+            alert(result);
+        
+        }
+        //
+        // When the window loads,add the onsubmit event to the form
+        window.onload=()=>{
+            //
+            const button = document.querySelector("button");
+            button.onclick=send_mail;
+        }
+    </script>
+</head>
+<body>
+    <form>
+        <input type="text" id="email" placeholder="Email">
+        <input type="text" id="user_name" placeholder="Name">
+        <button type="button">Forgot Password</button>
+    </form>
+</body>
+</html>
