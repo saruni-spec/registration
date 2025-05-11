@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Auth Test</title>
+    <script type="module">
+      //
+      import { app } from "./app.js";
+      //
+      window.onload = async () => {
+        //
+        // Let T be a test page
+        const App = new app();
+        //
+        await App.show();
+        //
+        window.App = App;
+      };
+    </script>
+  </head>
+  <body>
+    <h4>Testing authoriser</h4>
+    <div id="msg" hidden>Welcome <span id="username">?</span></div>
+    <button id="launch" onclick="App.administer()">Click here to login</button>
+  </body>
+</html>

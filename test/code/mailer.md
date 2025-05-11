@@ -7,6 +7,37 @@ The `mutall_mailer` class is a PHP implementation that extends PHPMailer library
 This class is currently beig used for password recovery for mutall users where users receive their new passwords in the emails when they forget their previous ones.
 The implementation allows any mutall programmer to send emails from their applications through mutall's libary.
 
+### Prerequisites
+
+## PHPMailer Installation Guide
+
+### Installation Methods
+
+#### Method 1: Using Composer Global Installation
+
+1. Open your terminal or command prompt.
+2. Navigate to your project directory.
+3. Run the following Composer command:
+
+```bash
+composer require phpmailer/phpmailer
+```
+
+#### Method 2: Using Local Composer (composer.phar)
+
+1. Open your terminal or command prompt.
+2. Navigate to your project directory.
+3. Run the following command:
+
+```bash
+php composer.phar require phpmailer/phpmailer
+```
+
+### Differences Between Installation Methods
+
+- **Global Composer**: Uses the globally installed Composer
+- **Local Composer (composer.phar)**: Uses a local Composer installation,requires a composer.phar in your project directory
+
 ## Class Structure
 
 ### Namespace
@@ -31,23 +62,7 @@ This class does not define any constants.
 
 ## Properties
 
-The class inherits all properties from the PHPMailer class and configures several of them during initialization:
-
-The class inherits properties from PHPMailer, including:
-
-SMTPDebug - Enables detailed debugging messages.
-
-Host - Specifies the SMTP server host.
-
-SMTPAuth - Enables authentication for the SMTP server.
-
-Username - The SMTP server username (email address).
-
-Password - The SMTP server password.
-
-SMTPSecure - The encryption method for secure communication.
-
-Port - The SMTP server port.
+The class inherits all properties from the PHPMailer class and configures several of them during initialization
 
 ## Methods
 
@@ -55,39 +70,13 @@ Port - The SMTP server port.
 
 ```php
 
+
 public function __construct()
 
-```
-
-The constructor initializes the PHPMailer instance with exception handling enabled, sets up the SMTP server configuration, and configures default sending addresses.
-
-### Private Methods
-
-#### `server_config()`
-
-```php
-
-private function server_config()
 
 ```
 
-Configures the SMTP server connection details including:
-
-- Debug level (disabled by default)
-- SMTP server host (smtp.gmail.com)
-- Authentication credentials
-- Encryption type (TLS)
-- Server port (587)
-
-#### `set_source_addresses()`
-
-```php
-
-private function set_source_addresses()
-
-```
-
-Sets up the default sender and reply-to addresses for all emails sent through this class.
+The constructor initializes the PHPMailer instance .Requires no parameters.
 
 ### Public Methods
 
@@ -95,14 +84,16 @@ Sets up the default sender and reply-to addresses for all emails sent through th
 
 ```php
 
+
 public function send_email(
-    string $receiver,
-    string $subject,
-    string $body,
-    string $name = "",
-    string $attachment = null,
-    bool $is_html = false
+   string $receiver,
+   string $subject,
+   string $body,
+   string $name = "",
+   string $attachment = null,
+   bool $is_html = false
 ): string
+
 
 ```
 
@@ -121,37 +112,33 @@ Sends an email to the specified recipient.
 
 - `string` - "ok" on success, or an error message on failure
 
-## Usage Example
+## TypeScript Interface
 
-```php
-// Create a new instance of the mailer
-$mailer = new \mutall\mutall_mailer();
-
-// Send a simple text email
-$result = $mailer->send_email(
-    "recipient@example.com",
-    "Test Subject",
-    "This is a test email body",
-    "Recipient Name"
-);
-
-// Check if the email was sent successfully
-if ($result === "ok") {
-    echo "Email sent successfully!";
-} else {
-    echo "Error sending email: " . $result;
+```typescript
+//
+// mutall_mailer class declaration
+class mutall_mailer {
+  //
+  // Send an email to the given recipient
+  // Returns 'ok' on success or an error message on failure
+  send_email(
+    // Email address of the recipient
+    receiver: string,
+    // Subject of the email
+    subject: string,
+    // Content of the email
+    body: string,
+    // Name of the recipient (optional)
+    name?: string,
+    // Path to an attachment file (optional)
+    attachment?: string,
+    // Whether the email body contains HTML (optional)
+    is_html?: boolean
+  ): Promise<string>;
 }
-
-// Send an HTML email with an attachment
-$result = $mailer->send_email(
-    "recipient@example.com",
-    "HTML Email with Attachment",
-    "<h1>Hello World!</h1><p>This is an <b>HTML</b> email.</p>",
-    "Recipient Name",
-    "/path/to/attachment.pdf",
-    true // Set to true for HTML emails
-);
 ```
+
+## Usage Example
 
 ## HTML Form Implementation
 
@@ -213,48 +200,4 @@ Here's an example of how to use the `mutall_mailer` class with a JavaScript fron
     </form>
   </body>
 </html>
-```
-
-## Security Considerations
-
-1. The class uses hardcoded SMTP credentials. In a production environment, these should be stored in a secure configuration file or environment variables.
-2. The example includes a password recovery implementation that sends a static password. In a real-world scenario, you should generate secure random passwords or tokens.
-3. Consider implementing rate limiting to prevent abuse of email-sending capabilities.
-
-## Contributions
-
-To contribute to this class:
-
-1. Enhance error handling for better debugging and logging
-2. Add support for multiple recipients and CC/BCC options as parameters
-3. Implement templates for common email types
-4. Add support for loading configuration from environment variables
-5. Create unit tests to verify functionality
-
-## TypeScript Interface
-
-For TypeScript projects interacting with this PHP class:
-
-```typescript
-//
-// mutall_mailer class declaration
-interface mutall_mailer {
-  //
-  // Send an email to the given recipient
-  // Returns 'ok' on success or an error message on failure
-  send_email(
-    // Email address of the recipient
-    receiver: string,
-    // Subject of the email
-    subject: string,
-    // Content of the email
-    body: string,
-    // Name of the recipient (optional)
-    name?: string,
-    // Path to an attachment file (optional)
-    attachment?: string,
-    // Whether the email body contains HTML (optional)
-    is_html?: boolean
-  ): Promise<string>;
-}
 ```
